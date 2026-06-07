@@ -269,7 +269,7 @@ const CORR=[
   {x:440,y:487,w:100,h:55},
 ];
 const WALK=[...ROOMS,...CORR];
-function walkable(x,y,m=18){return WALK.some(r=>x>=r.x+m&&x<=r.x+r.w-m&&y>=r.y+m&&y<=r.y+r.h-m);}
+function walkable(x,y,m=8){return WALK.some(r=>x>=r.x+m&&x<=r.x+r.w-m&&y>=r.y+m&&y<=r.y+r.h-m);}
 const EMG={x:115,y:155,r:18};
 const TDEFS=[
   {id:'coffee', x:395,y:120,lbl:'☕ Fazer café',    clr:'#8B5A2B'},
