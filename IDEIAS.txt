@@ -1,0 +1,55 @@
+========================================
+  AMONG CATS — Backlog de Melhorias
+========================================
+
+[v0.1 - Lançado 07/06/2026]
+✅ Mapa com 8 salas + corredores
+✅ 5 bots com IA (impostor + tripulantes)
+✅ 6 tarefas (café, fios, scan, combustível, resfriamento, dados)
+✅ Sistema de reunião + votação (20s)
+✅ Personalização: 16 cores, 12 chapéus, 4 pelagens, 8 cores de olhos
+✅ Preview ao vivo na personalização
+✅ Joystick mobile
+✅ Câmera que segue o jogador
+
+----------------------------------------
+GAMEPLAY
+----------------------------------------
+[ ] Modo multiplayer local (2 jogadores no mesmo teclado)
+[ ] Mais salas no mapa (laboratório, nave, jardim)
+[ ] Tarefas mais elaboradas: memória, sequência de teclas
+[ ] Sabotagem pelo impostor (apagar luz, travar portas)
+[ ] Vent system: impostores podem usar ventilações
+[ ] Chat de texto durante reuniões
+[ ] Temporizador de partida (pressão)
+[ ] Dificuldade: fácil / normal / difícil (velocidade dos bots, kill cooldown)
+[ ] Mortos viram fantasmas e podem completar tarefas (mas não votam)
+
+----------------------------------------
+VISUAL / AUDIO
+----------------------------------------
+[ ] Animação de andar (pernas se mexem)
+[ ] Som de passos, morte, tarefa completa, reunião
+[ ] Efeito de piscar quando bots se movem perto
+[ ] Fundo de estrelas animado no mapa
+[ ] Transição de tela com fade suave
+[ ] Sala de espera animada antes de iniciar
+[ ] Efeito de sangue/rastro quando há corpo
+[ ] Skins desbloqueáveis (ex: gatinho ninja, astronauta, robô)
+
+----------------------------------------
+PERSONALIZAÇÃO
+----------------------------------------
+[ ] Tamanho do gato (pequeno, normal, gordo)
+[ ] Acessórios extras: óculos, coleira, mochila
+[ ] Padrão de pelagem mais variados (xadrez, gradiente)
+[ ] Cores customizáveis com color picker livre
+[ ] Salvar perfil no localStorage
+
+----------------------------------------
+SOCIAL / METAGAME
+----------------------------------------
+[ ] Placar de vitórias salvo no localStorage
+[ ] Conquistas (ex: "Venceu 10x como impostor")
+[ ] Compartilhar gatinho customizado como imagem
+[ ] Modo espectador após ser eliminado
