@@ -567,28 +567,28 @@ function lt(h,a){const r=parseInt(h.slice(1,3),16),g=parseInt(h.slice(3,5),16),b
 function h2rgb(h){return{r:parseInt(h.slice(1,3),16),g:parseInt(h.slice(3,5),16),b:parseInt(h.slice(5,7),16)};}
 
 // ══ MAP ══
-const WW=900,WH=640;
+const WW=2700,WH=1920;
 const ROOMS=[
-  {id:'abrigo',  x:10, y:20, w:235,h:390,clr:'#0c1f40',lbl:'🐾 Abrigo'},
-  {id:'dormit',  x:320,y:20, w:195,h:150,clr:'#18082a',lbl:'🛏️ Dormitório'},
-  {id:'reunioes',x:270,y:180,w:245,h:195,clr:'#141414',lbl:'📢 Reuniões',em:true},
-  {id:'refeit',  x:620,y:180,w:215,h:195,clr:'#0c2818',lbl:'🍖 Refeitório'},
-  {id:'caixa',   x:320,y:385,w:195,h:145,clr:'#281808',lbl:'🪣 Caixa de Areia'},
+  {id:'abrigo',  x:30,  y:60,  w:705, h:1170,clr:'#0c1f40',lbl:'🐾 Abrigo'},
+  {id:'dormit',  x:960, y:60,  w:585, h:450, clr:'#18082a',lbl:'🛏️ Dormitório'},
+  {id:'reunioes',x:810, y:540, w:735, h:585, clr:'#141414',lbl:'📢 Reuniões',em:true},
+  {id:'refeit',  x:1860,y:540, w:645, h:585, clr:'#0c2818',lbl:'🍖 Refeitório'},
+  {id:'caixa',   x:960, y:1155,w:585, h:435, clr:'#281808',lbl:'🪣 Caixa de Areia'},
 ];
 const CORR=[
-  {x:230,y:245,w:55, h:90},  // abrigo ↔ reunioes
-  {x:345,y:155,w:100,h:40},  // dormitório ↔ reunioes
-  {x:500,y:240,w:135,h:85},  // reunioes ↔ refeitorio
-  {x:345,y:360,w:100,h:40},  // reunioes ↔ caixa de areia
+  {x:690, y:735, w:165,h:270}, // abrigo ↔ reunioes
+  {x:1035,y:465, w:300,h:120}, // dormitório ↔ reunioes
+  {x:1500,y:720, w:405,h:255}, // reunioes ↔ refeitorio
+  {x:1035,y:1080,w:300,h:120}, // reunioes ↔ caixa de areia
 ];
 const WALK=[...ROOMS,...CORR];
 function walkable(x,y,m=5){return WALK.some(r=>x>=r.x+m&&x<=r.x+r.w-m&&y>=r.y+m&&y<=r.y+r.h-m);}
-const EMG={x:392,y:210,r:18};
+const EMG={x:1176,y:630,r:54};
 const TDEFS=[
-  {id:'arranha', x:127,y:180,lbl:'🐾 Arranhar poste',   clr:'#8B5A2B'},
-  {id:'camas',   x:415,y:90, lbl:'😴 Arrumar camas',    clr:'#aa44ff'},
-  {id:'petisco', x:715,y:275,lbl:'🍖 Servir petiscos',  clr:'#ff6633'},
-  {id:'caixas',  x:415,y:455,lbl:'💩 Limpar caixa de areia', clr:'#ffaa00'},
+  {id:'arranha', x:381, y:540, lbl:'🐾 Arranhar poste',   clr:'#8B5A2B'},
+  {id:'camas',   x:1245,y:270, lbl:'😴 Arrumar camas',    clr:'#aa44ff'},
+  {id:'petisco', x:2145,y:825, lbl:'🍖 Servir petiscos',  clr:'#ff6633'},
+  {id:'caixas',  x:1245,y:1365,lbl:'💩 Limpar caixa de areia', clr:'#ffaa00'},
 ];
 
 // ══ GAME STATE ══
@@ -616,13 +616,13 @@ function startGame(){
   const pIsImp=impIdx===0;
 
   G={
-    player:{id:'p',x:127,y:215,spd:2.7,color:C.color,eye:C.eye,hat:C.hat,pattern:C.pattern,name:C.name,dir:1,alive:true,isPlayer:true,isImp:pIsImp,killCD:pIsImp?10:9999,tasksDone:0},
+    player:{id:'p',x:381,y:645,spd:4.2,color:C.color,eye:C.eye,hat:C.hat,pattern:C.pattern,name:C.name,dir:1,alive:true,isPlayer:true,isImp:pIsImp,killCD:pIsImp?10:9999,tasksDone:0},
     bots:[],tasks:[],bodies:[],deathAnims:[],emergUsed:false,phase:'role',voted:false,
   };
 
   for(let i=0;i<5;i++){
     const room=ROOMS[Math.floor(Math.random()*ROOMS.length)];
-    G.bots.push({id:'b'+i,x:room.x+room.w/2+(Math.random()-.5)*30,y:room.y+room.h/2+(Math.random()-.5)*30,spd:1.35+Math.random()*.7,color:BCLRS[i],eye:BEYES[i],hat:BHATS[i],pattern:BPATS[i],name:BNAMES[i],dir:1,alive:true,isPlayer:false,isImp:i+1===impIdx,killCD:i+1===impIdx?10:9999,tX:0,tY:0,tRoom:null,timer:0});
+    G.bots.push({id:'b'+i,x:room.x+room.w/2+(Math.random()-.5)*30,y:room.y+room.h/2+(Math.random()-.5)*30,spd:2.1+Math.random()*1.1,color:BCLRS[i],eye:BEYES[i],hat:BHATS[i],pattern:BPATS[i],name:BNAMES[i],dir:1,alive:true,isPlayer:false,isImp:i+1===impIdx,killCD:i+1===impIdx?10:9999,tX:0,tY:0,tRoom:null,timer:0});
   }
   G.tasks=TDEFS.map(t=>({...t,done:false}));
   G.bots.forEach(b=>pickT(b));
