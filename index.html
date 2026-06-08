@@ -742,6 +742,30 @@ function drawDeathAnims(){
   });
 }
 
+let _stepLast=0,_stepSide=0;
+function _playStep(){
+  try{
+    const now=Date.now();
+    if(now-_stepLast<210)return;
+    _stepLast=now;_stepSide^=1;
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const dur=0.055;
+    const buf=ac.createBuffer(1,Math.ceil(ac.sampleRate*dur),ac.sampleRate);
+    const d=buf.getChannelData(0);
+    for(let i=0;i<d.length;i++){
+      const t=i/ac.sampleRate;
+      d[i]=(Math.random()*2-1)*Math.pow(1-t/dur,2.5);
+    }
+    const src=ac.createBufferSource();src.buffer=buf;
+    const lp=ac.createBiquadFilter();lp.type='lowpass';
+    lp.frequency.value=_stepSide?380:320;
+    lp.Q.value=1.2;
+    const g=ac.createGain();g.gain.value=0.28;
+    src.connect(lp);lp.connect(g);g.connect(ac.destination);
+    src.start();src.stop(ac.currentTime+dur);
+  }catch(e){}
+}
+
 function updPlayer(dt){
   if(G.phase!=='play')return;
   const p=G.player;if(!p.alive)return;
@@ -751,7 +775,9 @@ function updPlayer(dt){
   if(_jvx||_jvy){vx=_jvx;vy=_jvy;}
   if(vx&&vy){vx*=.707;vy*=.707;}
   const nx=p.x+vx*p.spd,ny=p.y+vy*p.spd;
+  const moved=(vx&&walkable(nx,p.y))||(vy&&walkable(p.x,ny));
   if(vx&&walkable(nx,p.y))p.x=nx;if(vy&&walkable(p.x,ny))p.y=ny;
+  if(moved)_playStep();
   if(vx)p.dir=vx>0?1:-1;
   if(p.isImp&&p.killCD>0)p.killCD-=dt/60;
   camX=Math.max(0,Math.min(p.x-gc.width/2,WW-gc.width));
