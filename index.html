@@ -430,6 +430,7 @@ drawStars();addEventListener('resize',drawStars);
     }catch(e){}
     _ac=null;_musicNodes=[];
   }
+  window.stopIntroMusic=stopIntroMusic;
 
   let _musicStarted=false;
 
@@ -2086,7 +2087,7 @@ jz.addEventListener('touchmove',handleJoy,{passive:true});
 jz.addEventListener('touchend',()=>{_jvx=0;_jvy=0;jt.style.transform='translate(-50%,-50%)';},{passive:true});
 
 // ══ SCREEN ══
-function go(id){document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='customize')updPrev();}
+function go(id){window.stopIntroMusic&&window.stopIntroMusic();document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='customize')updPrev();}
 function closeOv(id){document.getElementById(id).classList.remove('active');}
 function closeAllOv(){document.querySelectorAll('.ov').forEach(o=>o.classList.remove('active'));}
 
