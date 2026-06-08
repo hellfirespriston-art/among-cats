@@ -429,7 +429,9 @@ drawStars();addEventListener('resize',drawStars);
     _ac=null;_musicNodes=[];
   }
 
-  window.skipIntro=function(){
+  let _musicStarted=false;
+
+  function _doSkip(){
     if(_done)return;
     _done=true;
     cancelAnimationFrame(_raf);
@@ -441,28 +443,18 @@ drawStars();addEventListener('resize',drawStars);
       ov.style.display='none';
       document.getElementById('menu').classList.add('active');
     },620);
-  };
+  }
 
-  // auto-skip after 6s
-  setTimeout(()=>{ if(!_done)window.skipIntro(); },6000);
-
-  let _musicStarted=false;
-  window.skipIntro._orig=window.skipIntro;
-  // override: first tap starts music, second tap (or after 1.5s) skips
-  const _origSkip=window.skipIntro;
   window.skipIntro=function(){
     if(_done)return;
     if(!_musicStarted){
       _musicStarted=true;
       startIntroMusic();
-      // update hint
       const tap=document.getElementById('intro-tap');
       if(tap)tap.textContent='Toque novamente para começar';
-      // auto-skip after 8s from music start
-      setTimeout(()=>{ if(!_done)_origSkip(); },8000);
       return;
     }
-    _origSkip();
+    _doSkip();
   };
 
   window.addEventListener('load',()=>{ frame(); });
