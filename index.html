@@ -510,7 +510,7 @@ function buildUI(){
 }
 
 const prevC=document.getElementById('prev'),pCtx=prevC.getContext('2d');
-function updPrev(){C.name=document.getElementById('pname').value||'Gatão';pCtx.clearRect(0,0,136,136);drawCat(pCtx,68,80,{...C,dir:1,scale:2.1,isPlayer:true});}
+function updPrev(){C.name=document.getElementById('pname').value||'Gatão';pCtx.clearRect(0,0,136,136);drawCat(pCtx,68,92,{...C,dir:1,scale:2.1,isPlayer:true});}
 
 // ══ CAT DRAW ══
 function drawCat(ctx,x,y,o={}){
