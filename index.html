@@ -1159,7 +1159,7 @@ function sandboxLoop(){
     s.x+=s.vx;s.y+=s.vy;s.vy+=s.grav;s.alpha-=0.035;
     if(s.alpha<=0)return false;
     ctx.globalAlpha=s.alpha;
-    ctx.fillStyle='#d4aa44';
+    ctx.fillStyle='#1a0a00';
     ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
     ctx.globalAlpha=1;
     return true;
