@@ -446,7 +446,26 @@ drawStars();addEventListener('resize',drawStars);
   // auto-skip after 6s
   setTimeout(()=>{ if(!_done)window.skipIntro(); },6000);
 
-  window.addEventListener('load',()=>{ frame(); startIntroMusic(); });
+  let _musicStarted=false;
+  window.skipIntro._orig=window.skipIntro;
+  // override: first tap starts music, second tap (or after 1.5s) skips
+  const _origSkip=window.skipIntro;
+  window.skipIntro=function(){
+    if(_done)return;
+    if(!_musicStarted){
+      _musicStarted=true;
+      startIntroMusic();
+      // update hint
+      const tap=document.getElementById('intro-tap');
+      if(tap)tap.textContent='Toque novamente para começar';
+      // auto-skip after 8s from music start
+      setTimeout(()=>{ if(!_done)_origSkip(); },8000);
+      return;
+    }
+    _origSkip();
+  };
+
+  window.addEventListener('load',()=>{ frame(); });
 })();
 
 const COLORS=['#ff4444','#ff8800','#ffcc00','#aaff44','#00cc55','#00ccff','#4488ff','#9933ff','#ff44aa','#ddddff','#889aaa','#335566','#cc7733','#44ffcc','#ff6699','#33ffee'];
