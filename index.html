@@ -1302,6 +1302,59 @@ function openSandboxTask(task){
   cancelAnimationFrame(_sandboxRaf);
   sandboxLoop();
 
+  function _playCrack(){
+    try{
+      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const sr=ac.sampleRate;
+      const master=ac.createGain();master.gain.value=1.0;master.connect(ac.destination);
+
+      // transiente inicial: click seco curtíssimo
+      const clickDur=0.004;
+      const cb=ac.createBuffer(1,Math.ceil(sr*clickDur),sr);
+      const cd=cb.getChannelData(0);
+      for(let i=0;i<cd.length;i++) cd[i]=(Math.random()*2-1)*Math.pow(1-i/cd.length,2);
+      const cSrc=ac.createBufferSource();cSrc.buffer=cb;
+      const cG=ac.createGain();cG.gain.value=1.8;
+      cSrc.connect(cG);cG.connect(master);
+      cSrc.start(ac.currentTime);
+
+      // corpo do estalo: ruído curto ressonante (osso quebrando)
+      const crackDur=0.055+Math.random()*0.03;
+      const nb=ac.createBuffer(1,Math.ceil(sr*crackDur),sr);
+      const nd=nb.getChannelData(0);
+      for(let i=0;i<nd.length;i++){
+        const t=i/sr;
+        const env=Math.pow(1-t/crackDur,3);
+        nd[i]=(Math.random()*2-1)*env;
+      }
+      const nSrc=ac.createBufferSource();nSrc.buffer=nb;
+      // bandpass estreito para dar o "estalo" com timbre de osso
+      const bp=ac.createBiquadFilter();bp.type='bandpass';
+      bp.frequency.value=900+Math.random()*400;bp.Q.value=4+Math.random()*3;
+      // reforço de sub para deixar "gordo"
+      const pk=ac.createBiquadFilter();pk.type='peaking';
+      pk.frequency.value=120+Math.random()*60;pk.gain.value=12;pk.Q.value=1.2;
+      const nG=ac.createGain();nG.gain.value=1.4;
+      nSrc.connect(bp);bp.connect(pk);pk.connect(nG);nG.connect(master);
+      nSrc.start(ac.currentTime+0.001);
+
+      // cauda: ressonância curta (eco do osso)
+      const tailDur=0.12;
+      const tb=ac.createBuffer(1,Math.ceil(sr*tailDur),sr);
+      const td2=tb.getChannelData(0);
+      for(let i=0;i<td2.length;i++){
+        const t=i/sr;
+        td2[i]=(Math.random()*2-1)*Math.pow(1-t/tailDur,6);
+      }
+      const tSrc=ac.createBufferSource();tSrc.buffer=tb;
+      const tbp=ac.createBiquadFilter();tbp.type='bandpass';
+      tbp.frequency.value=300+Math.random()*200;tbp.Q.value=8;
+      const tG=ac.createGain();tG.gain.value=0.35;
+      tSrc.connect(tbp);tbp.connect(tG);tG.connect(master);
+      tSrc.start(ac.currentTime+0.02);
+    }catch(e){}
+  }
+
   function _playFart(){
     try{
       const ac=new(window.AudioContext||window.webkitAudioContext)();
@@ -1354,7 +1407,7 @@ function openSandboxTask(task){
       const dx=mx-p.x,dy=my-p.y;
       if(Math.sqrt(dx*dx+dy*dy)<pr*1.1){
         p.hp=Math.max(0,p.hp-0.2);
-        _sandboxPawAnim={x:mx,y:my,alpha:1.2,scale:0.6};_playFart();
+        _sandboxPawAnim={x:mx,y:my,alpha:1.2,scale:0.6};_playCrack();
         // spawn sand particles
         for(let i=0;i<12;i++){
           const ang=Math.random()*Math.PI*2;
