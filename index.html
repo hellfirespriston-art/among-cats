@@ -732,6 +732,73 @@ function openScratchTask(task){
     if(ov.style.display==='none')return;
     _doScratch();
   };
+  let _meowIndex=0;
+  function _playMeow(){
+    try{
+      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const type=_meowIndex%3;_meowIndex++;
+      const master=ac.createGain();master.connect(ac.destination);
+
+      if(type===0){
+        // miado curto agudo: "miau!" rápido
+        const dur=0.38;
+        const osc=ac.createOscillator();osc.type='triangle';
+        const form=ac.createBiquadFilter();form.type='bandpass';form.frequency.value=1100;form.Q.value=1.8;
+        const g=ac.createGain();
+        osc.frequency.setValueAtTime(680,ac.currentTime);
+        osc.frequency.linearRampToValueAtTime(820,ac.currentTime+0.08);
+        osc.frequency.linearRampToValueAtTime(420,ac.currentTime+dur);
+        g.gain.setValueAtTime(0,ac.currentTime);
+        g.gain.linearRampToValueAtTime(0.55,ac.currentTime+0.04);
+        g.gain.linearRampToValueAtTime(0.4,ac.currentTime+0.15);
+        g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+        osc.connect(form);form.connect(g);g.connect(master);
+        osc.start();osc.stop(ac.currentTime+dur);
+
+      } else if(type===1){
+        // miado longo reclamão: "miaaaau~"
+        const dur=0.65;
+        const osc=ac.createOscillator();osc.type='sawtooth';
+        const form=ac.createBiquadFilter();form.type='bandpass';form.frequency.value=900;form.Q.value=2.2;
+        const form2=ac.createBiquadFilter();form2.type='peaking';form2.frequency.value=2200;form2.gain.value=10;form2.Q.value=1.5;
+        const g=ac.createGain();
+        osc.frequency.setValueAtTime(520,ac.currentTime);
+        osc.frequency.linearRampToValueAtTime(760,ac.currentTime+0.12);
+        osc.frequency.setValueAtTime(760,ac.currentTime+0.12);
+        osc.frequency.linearRampToValueAtTime(580,ac.currentTime+0.4);
+        osc.frequency.linearRampToValueAtTime(340,ac.currentTime+dur);
+        g.gain.setValueAtTime(0,ac.currentTime);
+        g.gain.linearRampToValueAtTime(0.5,ac.currentTime+0.06);
+        g.gain.setValueAtTime(0.45,ac.currentTime+0.35);
+        g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+        osc.connect(form);form.connect(form2);form2.connect(g);g.connect(master);
+        osc.start();osc.stop(ac.currentTime+dur);
+
+      } else {
+        // miado rouco surpreso: "rreow!" com vibrato
+        const dur=0.45;
+        const osc=ac.createOscillator();osc.type='sawtooth';
+        const vib=ac.createOscillator();vib.type='sine';vib.frequency.value=7;
+        const vibG=ac.createGain();vibG.gain.value=28;
+        const form=ac.createBiquadFilter();form.type='bandpass';form.frequency.value=800;form.Q.value=1.5;
+        const hp=ac.createBiquadFilter();hp.type='highpass';hp.frequency.value=200;
+        const g=ac.createGain();
+        osc.frequency.setValueAtTime(300,ac.currentTime);
+        osc.frequency.linearRampToValueAtTime(700,ac.currentTime+0.07);
+        osc.frequency.linearRampToValueAtTime(500,ac.currentTime+dur);
+        vib.connect(vibG);vibG.connect(osc.frequency);
+        g.gain.setValueAtTime(0,ac.currentTime);
+        g.gain.linearRampToValueAtTime(0.5,ac.currentTime+0.05);
+        g.gain.setValueAtTime(0.42,ac.currentTime+0.2);
+        g.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+        osc.connect(form);form.connect(hp);hp.connect(g);g.connect(master);
+        vib.start();osc.start();
+        osc.stop(ac.currentTime+dur);vib.stop(ac.currentTime+dur);
+      }
+      master.gain.value=0.7;
+    }catch(e){}
+  }
+
   function _doScratch(){
     if(ov.style.display==='none')return;
     // add flash
@@ -741,6 +808,7 @@ function openScratchTask(task){
     const cy=innerHeight*(0.12+Math.random()*0.74);
     _scratchFlashes.push({x:cx,y:cy,mirror:_scratchSide<0,alpha:1.0});
     _scratchSide*=-1;
+    _playMeow();
     // fill bar
     _scratchProg=Math.min(100,_scratchProg+6.5);
     document.getElementById('scratch-bar').style.height=_scratchProg+'%';
