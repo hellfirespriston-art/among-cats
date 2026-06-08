@@ -344,10 +344,96 @@ drawStars();addEventListener('resize',drawStars);
     _raf=requestAnimationFrame(frame);
   }
 
+  // ── música de suspense ──
+  let _ac=null,_musicNodes=[];
+  function startIntroMusic(){
+    try{
+      _ac=new(window.AudioContext||window.webkitAudioContext)();
+      const ac=_ac;
+      const master=ac.createGain();master.gain.value=0;master.connect(ac.destination);
+      _musicNodes.push(master);
+      // fade in suave
+      master.gain.linearRampToValueAtTime(0.55,ac.currentTime+2.5);
+
+      // ── drone grave (pad de suspense) ──
+      [55,55.3,110,110.5].forEach((hz,i)=>{
+        const o=ac.createOscillator();o.type=i<2?'sawtooth':'sine';
+        o.frequency.value=hz;
+        const lfo=ac.createOscillator();lfo.frequency.value=0.12+i*0.03;
+        const lfoG=ac.createGain();lfoG.gain.value=0.8;
+        lfo.connect(lfoG);lfoG.connect(o.frequency);
+        const g=ac.createGain();g.gain.value=0.08;
+        const lp=ac.createBiquadFilter();lp.type='lowpass';lp.frequency.value=320;lp.Q.value=2;
+        o.connect(lp);lp.connect(g);g.connect(master);
+        o.start();lfo.start();
+        _musicNodes.push(o,lfo);
+      });
+
+      // ── pad médio (acorde menor) ──
+      // Dm: D3=146.8, F3=174.6, A3=220
+      [146.8,174.6,220,293.6].forEach((hz,i)=>{
+        const o=ac.createOscillator();o.type='triangle';
+        o.frequency.value=hz+Math.random()*0.4;
+        const lfo=ac.createOscillator();lfo.frequency.value=0.08+i*0.05;
+        const lfoG=ac.createGain();lfoG.gain.value=1.2;
+        lfo.connect(lfoG);lfoG.connect(o.frequency);
+        const g=ac.createGain();g.gain.value=0.06;
+        const lp=ac.createBiquadFilter();lp.type='bandpass';lp.frequency.value=600+i*80;lp.Q.value=1.5;
+        o.connect(lp);lp.connect(g);g.connect(master);
+        o.start();lfo.start();
+        _musicNodes.push(o,lfo);
+      });
+
+      // ── pulsação de tensão (batida lenta) ──
+      function pulse(delay){
+        if(!_ac)return;
+        const now=ac.currentTime+delay;
+        const o=ac.createOscillator();o.type='sine';o.frequency.value=55;
+        const g=ac.createGain();
+        g.gain.setValueAtTime(0,now);
+        g.gain.linearRampToValueAtTime(0.45,now+0.04);
+        g.gain.exponentialRampToValueAtTime(0.001,now+0.55);
+        o.connect(g);g.connect(master);
+        o.start(now);o.stop(now+0.6);
+        if(_ac)setTimeout(()=>pulse(0),2200);
+      }
+      setTimeout(()=>pulse(0),800);
+
+      // ── arpejo sinistro (notas subindo lentamente) ──
+      const notes=[130.8,155.6,174.6,196,220,261.6]; // Cm pentatônico
+      let ni=0;
+      function arp(){
+        if(!_ac)return;
+        const now=ac.currentTime;
+        const o=ac.createOscillator();o.type='sine';
+        o.frequency.value=notes[ni%notes.length];ni++;
+        const g=ac.createGain();
+        g.gain.setValueAtTime(0,now);
+        g.gain.linearRampToValueAtTime(0.12,now+0.08);
+        g.gain.exponentialRampToValueAtTime(0.001,now+1.1);
+        o.connect(g);g.connect(master);
+        o.start(now);o.stop(now+1.2);
+        if(_ac)setTimeout(arp,700+Math.random()*400);
+      }
+      setTimeout(arp,1200);
+
+    }catch(e){}
+  }
+
+  function stopIntroMusic(){
+    if(!_ac)return;
+    try{
+      _musicNodes.forEach(n=>{try{n.stop&&n.stop();}catch(e){}});
+      _ac.close();
+    }catch(e){}
+    _ac=null;_musicNodes=[];
+  }
+
   window.skipIntro=function(){
     if(_done)return;
     _done=true;
     cancelAnimationFrame(_raf);
+    stopIntroMusic();
     const ov=document.getElementById('intro-ov');
     ov.style.transition='opacity 0.6s';
     ov.style.opacity='0';
@@ -360,7 +446,7 @@ drawStars();addEventListener('resize',drawStars);
   // auto-skip after 6s
   setTimeout(()=>{ if(!_done)window.skipIntro(); },6000);
 
-  window.addEventListener('load',()=>{ frame(); });
+  window.addEventListener('load',()=>{ frame(); startIntroMusic(); });
 })();
 
 const COLORS=['#ff4444','#ff8800','#ffcc00','#aaff44','#00cc55','#00ccff','#4488ff','#9933ff','#ff44aa','#ddddff','#889aaa','#335566','#cc7733','#44ffcc','#ff6699','#33ffee'];
