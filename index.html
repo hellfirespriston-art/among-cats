@@ -1021,10 +1021,9 @@ window.closeBedsTask=()=>{
 
 // ══ SANDBOX TASK ══
 let _sandboxTask=null,_sandboxRaf=null,_sandboxClick=null;
-// 5 poops, each with health 0..1 (1=full, 0=gone)
 let _sandboxPoops=[];
-// paw animation: {x,y,alpha,scale} shown when clicking
 let _sandboxPawAnim=null;
+let _sandboxSand=[];
 
 function _initSandboxPoops(W,H){
   // box bounds (inside sandbox rect)
@@ -1109,6 +1108,17 @@ function sandboxLoop(){
     ctx.restore();
   });
 
+  // sand particles
+  _sandboxSand=_sandboxSand.filter(s=>{
+    s.x+=s.vx;s.y+=s.vy;s.vy+=s.grav;s.alpha-=0.035;
+    if(s.alpha<=0)return false;
+    ctx.globalAlpha=s.alpha;
+    ctx.fillStyle='#d4aa44';
+    ctx.beginPath();ctx.arc(s.x,s.y,s.r,0,Math.PI*2);ctx.fill();
+    ctx.globalAlpha=1;
+    return true;
+  });
+
   // paw animation
   if(_sandboxPawAnim){
     const pa=_sandboxPawAnim;
@@ -1174,7 +1184,7 @@ function openSandboxTask(task){
   const cv=document.getElementById('sandbox-c');
   cv.width=window.innerWidth;cv.height=window.innerHeight;
   _initSandboxPoops(cv.width,cv.height);
-  _sandboxPawAnim=null;
+  _sandboxPawAnim=null;_sandboxSand=[];
   cancelAnimationFrame(_sandboxRaf);
   sandboxLoop();
 
@@ -1191,6 +1201,12 @@ function openSandboxTask(task){
       if(Math.sqrt(dx*dx+dy*dy)<pr*1.1){
         p.hp=Math.max(0,p.hp-0.2);
         _sandboxPawAnim={x:mx,y:my,alpha:1.2,scale:0.6};
+        // spawn sand particles
+        for(let i=0;i<12;i++){
+          const ang=Math.random()*Math.PI*2;
+          const spd=1.5+Math.random()*4;
+          _sandboxSand.push({x:p.x,y:p.y,vx:Math.cos(ang)*spd,vy:Math.sin(ang)*spd-2,grav:0.18,alpha:1,r:2+Math.random()*3});
+        }
         hit=true;
       }
     });
