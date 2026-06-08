@@ -646,14 +646,56 @@ function drawClaw(ctx,cx,cy,mirror,alpha){
   ctx.restore();
 }
 
+function drawScratchPost(ctx,W,H){
+  const pw=W*0.28, cx=W/2;
+  // base platform
+  const bh=H*0.06, by=H*0.90;
+  ctx.fillStyle='#5c3a10';
+  ctx.beginPath();
+  ctx.ellipse(cx,by+bh*0.5,pw*0.7,bh*0.5,0,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#7a4e1c';
+  ctx.fillRect(cx-pw*0.65,by,pw*1.3,bh*0.5);
+  // rope-wrapped pole
+  const poleTop=H*0.10, poleH=H*0.80;
+  const rw=pw*0.38;
+  // base pole color
+  ctx.fillStyle='#8B6914';
+  ctx.fillRect(cx-rw/2,poleTop,rw,poleH);
+  // rope segments (alternating bands)
+  const nSegs=28;
+  const segH=poleH/nSegs;
+  for(let i=0;i<nSegs;i++){
+    ctx.fillStyle=i%2===0?'#c8922a':'#a87020';
+    ctx.fillRect(cx-rw/2,poleTop+i*segH,rw,segH);
+    // rope twist lines
+    ctx.strokeStyle=i%2===0?'#a87020':'#c8922a';
+    ctx.lineWidth=1.5;ctx.globalAlpha=0.5;
+    ctx.beginPath();
+    ctx.moveTo(cx-rw/2,poleTop+i*segH+segH*0.3);
+    ctx.lineTo(cx+rw/2,poleTop+i*segH+segH*0.7);
+    ctx.stroke();
+    ctx.globalAlpha=1;
+  }
+  // pole border
+  ctx.strokeStyle='#6b4a08';ctx.lineWidth=3;
+  ctx.strokeRect(cx-rw/2,poleTop,rw,poleH);
+  // top cap
+  ctx.fillStyle='#7a4e1c';
+  ctx.beginPath();ctx.ellipse(cx,poleTop,rw*0.58,rw*0.18,0,0,Math.PI*2);ctx.fill();
+}
+
 function scratchLoop(){
   const ov=document.getElementById('scratch-ov');
   if(ov.style.display==='none')return;
   const sc=document.getElementById('scratch-c');
   const ctx=sc.getContext('2d');
   sc.width=innerWidth;sc.height=innerHeight;
+  const W=sc.width,H=sc.height;
   // dark bg
-  ctx.fillStyle='#000';ctx.fillRect(0,0,sc.width,sc.height);
+  ctx.fillStyle='#0a0500';ctx.fillRect(0,0,W,H);
+  // scratching post
+  drawScratchPost(ctx,W,H);
   // draw all active flashes
   _scratchFlashes=_scratchFlashes.filter(f=>{
     f.alpha-=0.055;
@@ -685,8 +727,10 @@ function openScratchTask(task){
   function _doScratch(){
     if(ov.style.display==='none')return;
     // add flash
-    const cx=innerWidth*(.3+Math.random()*.4);
-    const cy=innerHeight*(.25+Math.random()*.4);
+    // spawn claws inside the post area
+    const _pw=innerWidth*0.28*0.38;
+    const cx=innerWidth/2+(_pw/2-Math.random()*_pw);
+    const cy=innerHeight*(0.12+Math.random()*0.74);
     _scratchFlashes.push({x:cx,y:cy,mirror:_scratchSide<0,alpha:1.0});
     _scratchSide*=-1;
     // fill bar
