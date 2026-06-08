@@ -451,26 +451,25 @@ drawStars();addEventListener('resize',drawStars);
     },620);
   }
 
+  let _musicStartTime=0;
+
   window.skipIntro=function(){
     if(_done)return;
+    if(!_musicStarted){
+      // primeiro toque: só inicia música
+      _musicStarted=true;
+      _musicStartTime=Date.now();
+      startIntroMusic();
+      const tap=document.getElementById('intro-tap');
+      if(tap)tap.textContent='Toque novamente para começar';
+      return;
+    }
+    // segundo toque (ou pelo menos 400ms depois): sai da intro
+    if(Date.now()-_musicStartTime<400)return;
     _doSkip();
   };
 
-  window.addEventListener('load',()=>{
-    frame();
-    // inicia música apenas no primeiro gesto do usuário
-    const startOnGesture=()=>{
-      if(_musicStarted)return;
-      _musicStarted=true;
-      startIntroMusic();
-      document.removeEventListener('pointerdown',startOnGesture);
-      document.removeEventListener('keydown',startOnGesture);
-      document.removeEventListener('touchstart',startOnGesture);
-    };
-    document.addEventListener('pointerdown',startOnGesture);
-    document.addEventListener('keydown',startOnGesture);
-    document.addEventListener('touchstart',startOnGesture);
-  });
+  window.addEventListener('load',()=>{ frame(); });
 })();
 
 // ── AudioContext global compartilhado ──
