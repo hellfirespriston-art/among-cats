@@ -639,8 +639,51 @@ function updBots(dt){
   });
 }
 
+function _playDeath(isPlayer){
+  try{
+    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const master=ac.createGain();master.gain.value=0.7;master.connect(ac.destination);
+
+    // grito: voz sintética descendo em pitch
+    const screamDur=0.7+Math.random()*0.3;
+    const osc=ac.createOscillator();osc.type='sawtooth';
+    osc.frequency.setValueAtTime(isPlayer?680:520,ac.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(80,ac.currentTime+screamDur);
+    // vibrato de pânico
+    const vib=ac.createOscillator();vib.frequency.value=18;
+    const vibG=ac.createGain();vibG.gain.value=40;
+    vib.connect(vibG);vibG.connect(osc.frequency);
+    // formant para soar vocal
+    const f1=ac.createBiquadFilter();f1.type='bandpass';f1.frequency.value=900;f1.Q.value=2;
+    const f2=ac.createBiquadFilter();f2.type='bandpass';f2.frequency.value=2200;f2.Q.value=3;
+    const gS=ac.createGain();
+    gS.gain.setValueAtTime(0,ac.currentTime);
+    gS.gain.linearRampToValueAtTime(0.55,ac.currentTime+0.04);
+    gS.gain.setValueAtTime(0.5,ac.currentTime+screamDur*0.4);
+    gS.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+screamDur);
+    osc.connect(f1);f1.connect(f2);f2.connect(gS);gS.connect(master);
+    vib.start();osc.start();
+    osc.stop(ac.currentTime+screamDur);vib.stop(ac.currentTime+screamDur);
+
+    // baque de corpo caindo
+    const thudDur=0.18;
+    const tbuf=ac.createBuffer(1,Math.ceil(ac.sampleRate*thudDur),ac.sampleRate);
+    const td=tbuf.getChannelData(0);
+    for(let i=0;i<td.length;i++){
+      const t2=i/ac.sampleRate;
+      td[i]=(Math.random()*2-1)*Math.pow(1-t2/thudDur,3);
+    }
+    const tSrc=ac.createBufferSource();tSrc.buffer=tbuf;
+    const tlp=ac.createBiquadFilter();tlp.type='lowpass';tlp.frequency.value=180;tlp.Q.value=2;
+    const tg=ac.createGain();tg.gain.value=0.9;
+    tSrc.connect(tlp);tlp.connect(tg);tg.connect(master);
+    tSrc.start(ac.currentTime+screamDur*0.6);
+  }catch(e){}
+}
+
 function kill(t,by){
   t.alive=false;
+  _playDeath(t.isPlayer);
   const side=t.x>by.x?1:-1; // cai para o lado oposto ao assassino
   G.deathAnims.push({
     x:t.x, y:t.y,
