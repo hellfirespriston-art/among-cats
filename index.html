@@ -21,7 +21,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050810;color:#fff;f
 #customize{background:radial-gradient(ellipse at 50% 30%,#0d1b3e,#030810);flex-direction:row;gap:0}
 .cl{width:260px;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:28px 20px;border-right:1px solid #1a2a4a}
 .cr{flex:1;padding:20px 28px;overflow-y:auto;display:flex;flex-direction:column;gap:18px;max-height:100vh}
-.pvbox{width:148px;height:148px;background:#0d1530;border-radius:14px;border:2px solid #1e3a6a;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
+.pvbox{width:220px;height:220px;background:#0d1530;border-radius:14px;border:2px solid #1e3a6a;display:flex;align-items:center;justify-content:center;margin-bottom:18px}
 .slbl{font-size:.68rem;text-transform:uppercase;letter-spacing:1.5px;color:#446;font-weight:700;margin-bottom:8px}
 .cgrid{display:flex;flex-wrap:wrap;gap:6px}
 .cbtn{width:30px;height:30px;border-radius:50%;border:3px solid transparent;cursor:pointer;transition:transform .15s,border-color .15s}
@@ -106,7 +106,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050810;color:#fff;f
 <!-- PERSONALIZAÇÃO -->
 <div class="screen" id="customize">
   <div class="cl">
-    <div class="pvbox"><canvas id="prev" width="136" height="136"></canvas></div>
+    <div class="pvbox"><canvas id="prev" width="210" height="210"></canvas></div>
     <button class="playbtn" onclick="startGame()">🚀 Jogar!</button>
     <button class="back" onclick="go('menu')">← Voltar</button>
   </div>
@@ -510,7 +510,7 @@ function buildUI(){
 }
 
 const prevC=document.getElementById('prev'),pCtx=prevC.getContext('2d');
-function updPrev(){C.name=document.getElementById('pname').value||'Gatão';pCtx.clearRect(0,0,136,136);drawCat(pCtx,68,92,{...C,dir:1,scale:2.1,isPlayer:true});}
+function updPrev(){C.name=document.getElementById('pname').value||'Gatão';pCtx.clearRect(0,0,210,210);drawCat(pCtx,105,130,{...C,dir:1,scale:3.2,isPlayer:true});}
 
 // ══ CAT DRAW ══
 function drawCat(ctx,x,y,o={}){
