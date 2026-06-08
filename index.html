@@ -1216,7 +1216,6 @@ function openBedsTask(task){
     if(Math.hypot(dx,dy)<38){
       _bedsMade++;
       _playFluff();
-      document.getElementById('beds-prog').textContent=`Camas arrumadas: ${_bedsMade} / 3`;
       if(_bedsMade>=3){
         ov.removeEventListener('click',_bedsClick);
         setTimeout(()=>{closeBedsTask();completeTask(_bedsTask);},400);
@@ -1778,7 +1777,7 @@ function checkWin(){
   const crew=[G.player,...G.bots].filter(c=>c.alive&&!c.isImp);
   if(!imp.alive){setTimeout(()=>endGame(true,'O impostor foi eliminado! 🎉'),600);return;}
   if(G.tasks.every(t=>t.done)){setTimeout(()=>endGame(true,'Todas as tarefas completas! 🎊'),600);return;}
-  if(crew.length<=1){setTimeout(()=>endGame(false,`${imp.name} eliminou todos! 😈`),700);}
+  if(crew.length<=0){setTimeout(()=>endGame(false,`${imp.name} eliminou todos! 😈`),700);}
 }
 function endGame(cw,msg){
   G.phase='end';gameRunning=false;
