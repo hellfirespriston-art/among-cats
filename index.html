@@ -945,11 +945,36 @@ function openBedsTask(task){
   cancelAnimationFrame(_bedsRaf);
   movePaw();
   bedsLoop();
+  function _playFluff(){
+    try{
+      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const sr=ac.sampleRate;
+      const dur=0.22+Math.random()*0.12;
+      const buf=ac.createBuffer(1,Math.ceil(sr*dur),sr);
+      const d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++){
+        const t=i/sr;
+        const env=Math.pow(t/dur,0.3)*Math.pow(1-t/dur,1.8);
+        d[i]=(Math.random()*2-1)*env;
+      }
+      const src=ac.createBufferSource();src.buffer=buf;
+      // whoosh: lowpass que abre e fecha rápido
+      const lp=ac.createBiquadFilter();lp.type='lowpass';
+      lp.frequency.setValueAtTime(200,ac.currentTime);
+      lp.frequency.linearRampToValueAtTime(2800,ac.currentTime+dur*0.35);
+      lp.frequency.exponentialRampToValueAtTime(300,ac.currentTime+dur);
+      lp.Q.value=1.5;
+      const g=ac.createGain();g.gain.value=0.9;
+      src.connect(lp);lp.connect(g);g.connect(ac.destination);
+      src.start();src.stop(ac.currentTime+dur);
+    }catch(e){}
+  }
   _bedsClick=(e)=>{
     if(ov.style.display==='none')return;
     const dx=e.clientX-_bedsPawX,dy=e.clientY-_bedsPawY;
     if(Math.hypot(dx,dy)<38){
       _bedsMade++;
+      _playFluff();
       document.getElementById('beds-prog').textContent=`Camas arrumadas: ${_bedsMade} / 3`;
       if(_bedsMade>=3){
         ov.removeEventListener('click',_bedsClick);
@@ -1096,10 +1121,35 @@ function openRefeitTask(task){
   cancelAnimationFrame(_refeitRaf);
   refeitLoop();
   let _refeitLastPress=0;
+  function _playSwoosh(){
+    try{
+      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const sr=ac.sampleRate;
+      const dur=0.18+Math.random()*0.08;
+      const buf=ac.createBuffer(1,Math.ceil(sr*dur),sr);
+      const d=buf.getChannelData(0);
+      for(let i=0;i<d.length;i++){
+        const t=i/sr;
+        const env=Math.pow(1-t/dur,2.5);
+        d[i]=(Math.random()*2-1)*env;
+      }
+      const src=ac.createBufferSource();src.buffer=buf;
+      // sweep de highpass descendente: som de objeto cortando o ar
+      const hp=ac.createBiquadFilter();hp.type='highpass';
+      hp.frequency.setValueAtTime(3200,ac.currentTime);
+      hp.frequency.exponentialRampToValueAtTime(180,ac.currentTime+dur);
+      // leve reforço de presença
+      const pk=ac.createBiquadFilter();pk.type='peaking';
+      pk.frequency.value=1200;pk.gain.value=7;pk.Q.value=1.0;
+      const g=ac.createGain();g.gain.value=0.7;
+      src.connect(hp);hp.connect(pk);pk.connect(g);g.connect(ac.destination);
+      src.start();src.stop(ac.currentTime+dur);
+    }catch(e){}
+  }
   function _doRefeit(){
     const now=Date.now();if(now-_refeitLastPress<1000)return;_refeitLastPress=now;
     if(_refeitServed>=_refeitTotal)return;
-    _refeitServed++;_refeitShake=8;
+    _refeitServed++;_refeitShake=8;_playSwoosh();
     const sc2=document.getElementById('refeit-c');
     const cx=sc2.width/2, cy=sc2.height*0.54;
     const angle=(Math.random()*Math.PI*1.4)-Math.PI*0.7-Math.PI/2;
