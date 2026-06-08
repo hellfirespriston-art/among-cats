@@ -431,6 +431,8 @@ drawStars();addEventListener('resize',drawStars);
     _ac=null;_musicNodes=[];
   }
   window.stopIntroMusic=stopIntroMusic;
+  document.addEventListener('visibilitychange',()=>{if(document.hidden)stopIntroMusic();});
+  window.addEventListener('beforeunload',()=>stopIntroMusic());
 
   let _musicStarted=false;
 
