@@ -2099,6 +2099,45 @@ jz.addEventListener('touchstart',handleJoy,{passive:true});
 jz.addEventListener('touchmove',handleJoy,{passive:true});
 jz.addEventListener('touchend',()=>{_jvx=0;_jvy=0;jt.style.transform='translate(-50%,-50%)';},{passive:true});
 
+// ══ GAMEPAD (Xbox) ══
+let _gpBtnA=false,_gpBtnX=false,_gpBtnB=false;
+function pollGamepad(){
+  const gps=navigator.getGamepads?navigator.getGamepads():[];
+  for(const gp of gps){
+    if(!gp)continue;
+    // analógico esquerdo → movimento
+    const ax=gp.axes[0],ay=gp.axes[1];
+    const dead=0.18;
+    _jvx=Math.abs(ax)>dead?ax:0;
+    _jvy=Math.abs(ay)>dead?ay:0;
+
+    // Botão A (índice 0) → usar/interagir
+    const btnA=gp.buttons[0]?.pressed;
+    if(btnA&&!_gpBtnA&&G.phase==='play')tryUse();
+    _gpBtnA=btnA;
+
+    // Botão X (índice 2) → matar
+    const btnX=gp.buttons[2]?.pressed;
+    if(btnX&&!_gpBtnX&&G.phase==='play')tryKill();
+    _gpBtnX=btnX;
+
+    // Botão B (índice 1) → fechar overlay / fechar task
+    const btnB=gp.buttons[1]?.pressed;
+    if(btnB&&!_gpBtnB){
+      if(document.getElementById('task-ov').classList.contains('active'))closeTask();
+    }
+    _gpBtnB=btnB;
+
+    break; // usa só o primeiro controle
+  }
+  requestAnimationFrame(pollGamepad);
+}
+window.addEventListener('gamepadconnected',e=>{
+  showNotif(`🎮 Controle conectado: ${e.gamepad.id.split('(')[0].trim()}`);
+  pollGamepad();
+});
+window.addEventListener('gamepaddisconnected',()=>showNotif('🎮 Controle desconectado'));
+
 // ══ SCREEN ══
 function go(id){window.stopIntroMusic&&window.stopIntroMusic();document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));document.getElementById(id).classList.add('active');if(id==='customize')updPrev();}
 function closeOv(id){document.getElementById(id).classList.remove('active');}
