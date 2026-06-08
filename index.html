@@ -1237,68 +1237,41 @@ function openSandboxTask(task){
   function _playFart(){
     try{
       const ac=new(window.AudioContext||window.webkitAudioContext)();
-      const dur=0.5+Math.random()*0.4;
       const sr=ac.sampleRate;
-      const n=sr*dur;
+      const master=ac.createGain();master.gain.value=1.0;master.connect(ac.destination);
 
-      // --- camada 1: ruído grave filtrado (o "trompete") ---
-      const buf1=ac.createBuffer(1,n,sr);
-      const d1=buf1.getChannelData(0);
-      let prev=0;
-      for(let i=0;i<n;i++){
-        // ruído rosa (integração de ruído branco) → mais grave
-        prev=prev*0.97+(Math.random()*2-1)*0.03*28;
-        const t=i/sr;
-        const env=Math.pow(t/dur,0.2)*Math.pow(1-t/dur,0.8);
-        // modulação de amplitude irregular (borbujas grossas)
-        const mod=0.5+0.5*Math.sin(2*Math.PI*22*t)*Math.sin(2*Math.PI*9*t+1.3);
-        d1[i]=prev*env*(0.6+mod*0.8);
+      // múltiplas bolhas líquidas sobrepostas — cada uma curta e mole
+      const nBubbles=5+Math.floor(Math.random()*4);
+      for(let b=0;b<nBubbles;b++){
+        const delay=b*0.04+Math.random()*0.03;
+        const bDur=0.06+Math.random()*0.10;
+        const buf=ac.createBuffer(1,Math.ceil(sr*bDur),sr);
+        const d=buf.getChannelData(0);
+        // ruído filtrado com envelope suave (sem ataque duro)
+        let lp_s=0;
+        for(let i=0;i<d.length;i++){
+          const t=i/sr;
+          const white=Math.random()*2-1;
+          // lowpass simples no domínio do tempo → som mole
+          lp_s=lp_s*0.82+white*0.18;
+          // envelope: sobe rápido, cai lento
+          const env=Math.pow(t/bDur,0.1)*Math.pow(1-t/bDur,1.2);
+          d[i]=lp_s*env*2.2;
+        }
+        const src=ac.createBufferSource();src.buffer=buf;
+        // bandpass centrado em frequência baixa-média → molhado, não grave
+        const bp=ac.createBiquadFilter();bp.type='bandpass';
+        bp.frequency.value=180+Math.random()*260;
+        bp.Q.value=0.4+Math.random()*0.5;
+        // leve pitch wobble via segundo filter
+        const notch=ac.createBiquadFilter();notch.type='peaking';
+        notch.frequency.value=80+Math.random()*60;
+        notch.gain.value=8;notch.Q.value=1.5;
+        const g=ac.createGain();g.gain.value=0.28+Math.random()*0.18;
+        src.connect(bp);bp.connect(notch);notch.connect(g);g.connect(master);
+        src.start(ac.currentTime+delay);
+        src.stop(ac.currentTime+delay+bDur);
       }
-      const src1=ac.createBufferSource();src1.buffer=buf1;
-      const lp1=ac.createBiquadFilter();lp1.type='lowpass';
-      lp1.frequency.setValueAtTime(320,ac.currentTime);
-      lp1.frequency.exponentialRampToValueAtTime(50,ac.currentTime+dur);
-      lp1.Q.value=5;
-
-      // --- camada 2: squirt líquido (bandpass agudo e curto) ---
-      const squirtDur=0.08+Math.random()*0.06;
-      const buf2=ac.createBuffer(1,sr*squirtDur,sr);
-      const d2=buf2.getChannelData(0);
-      for(let i=0;i<d2.length;i++){
-        const t=i/sr;
-        const env=Math.sin(Math.PI*t/squirtDur);
-        d2[i]=(Math.random()*2-1)*env;
-      }
-      const src2=ac.createBufferSource();src2.buffer=buf2;
-      const bp=ac.createBiquadFilter();bp.type='bandpass';
-      bp.frequency.value=700+Math.random()*400;bp.Q.value=0.7;
-      const gSq=ac.createGain();gSq.gain.value=0.45;
-
-      // --- camada 3: borbulha final molhada ---
-      const bDur=0.12;
-      const buf3=ac.createBuffer(1,sr*bDur,sr);
-      const d3=buf3.getChannelData(0);
-      for(let i=0;i<d3.length;i++){
-        const t=i/sr;
-        const env=Math.pow(1-t/bDur,2);
-        d3[i]=(Math.random()*2-1)*env*Math.abs(Math.sin(2*Math.PI*35*t));
-      }
-      const src3=ac.createBufferSource();src3.buffer=buf3;
-      const lp3=ac.createBiquadFilter();lp3.type='lowpass';lp3.frequency.value=400;
-      const gB=ac.createGain();gB.gain.value=0.7;
-
-      const masterGain=ac.createGain();
-      masterGain.gain.setValueAtTime(1.4,ac.currentTime);
-      masterGain.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur+0.05);
-      masterGain.connect(ac.destination);
-
-      src1.connect(lp1);lp1.connect(masterGain);
-      src2.connect(bp);bp.connect(gSq);gSq.connect(masterGain);
-      src3.connect(lp3);lp3.connect(gB);gB.connect(masterGain);
-
-      src1.start();src1.stop(ac.currentTime+dur);
-      src2.start(ac.currentTime+0.04);src2.stop(ac.currentTime+0.04+squirtDur);
-      src3.start(ac.currentTime+dur*0.6);src3.stop(ac.currentTime+dur*0.6+bDur);
     }catch(e){}
   }
   _sandboxClick=(e)=>{
