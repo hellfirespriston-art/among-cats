@@ -473,6 +473,19 @@ drawStars();addEventListener('resize',drawStars);
   });
 })();
 
+// ── AudioContext global compartilhado ──
+let _gac=null;
+function getAC(){
+  if(!_gac||_gac.state==='closed'){
+    _gac=new(window.AudioContext||window.webkitAudioContext)();
+  }
+  if(_gac.state==='suspended')_gac.resume();
+  return _gac;
+}
+document.addEventListener('pointerdown',()=>getAC(),{once:true});
+document.addEventListener('keydown',()=>getAC(),{once:true});
+document.addEventListener('touchstart',()=>getAC(),{once:true});
+
 const COLORS=['#ff4444','#ff8800','#ffcc00','#aaff44','#00cc55','#00ccff','#4488ff','#9933ff','#ff44aa','#ddddff','#889aaa','#335566','#cc7733','#44ffcc','#ff6699','#33ffee'];
 const EYEC=['#00ee66','#44aaff','#ffaa00','#ff3344','#ffffff','#aa44ff','#ff8844','#00ffff'];
 const HATS=[
@@ -644,7 +657,7 @@ function updBots(dt){
 
 function _playDeath(isPlayer){
   try{
-    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const ac=getAC();
     const master=ac.createGain();master.gain.value=0.7;master.connect(ac.destination);
 
     // grito: voz sintética descendo em pitch
@@ -794,7 +807,7 @@ function _playStep(){
     const now=Date.now();
     if(now-_stepLast<210)return;
     _stepLast=now;_stepSide^=1;
-    const ac=new(window.AudioContext||window.webkitAudioContext)();
+    const ac=getAC();
     const dur=0.055;
     const buf=ac.createBuffer(1,Math.ceil(ac.sampleRate*dur),ac.sampleRate);
     const d=buf.getChannelData(0);
@@ -1050,7 +1063,7 @@ function openScratchTask(task){
   let _meowIndex=0;
   function _playMeow(){
     try{
-      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const ac=getAC();
       const type=_meowIndex%3;_meowIndex++;
       const master=ac.createGain();master.connect(ac.destination);
 
@@ -1262,7 +1275,7 @@ function openBedsTask(task){
   bedsLoop();
   function _playFluff(){
     try{
-      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const ac=getAC();
       const sr=ac.sampleRate;
       const dur=0.22+Math.random()*0.12;
       const buf=ac.createBuffer(1,Math.ceil(sr*dur),sr);
@@ -1437,7 +1450,7 @@ function openRefeitTask(task){
   let _refeitLastPress=0;
   function _playSwoosh(){
     try{
-      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const ac=getAC();
       const sr=ac.sampleRate;
       const dur=0.18+Math.random()*0.08;
       const buf=ac.createBuffer(1,Math.ceil(sr*dur),sr);
@@ -1668,7 +1681,7 @@ function openSandboxTask(task){
 
   function _playCrack(){
     try{
-      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const ac=getAC();
       const sr=ac.sampleRate;
       const master=ac.createGain();master.gain.value=1.0;master.connect(ac.destination);
 
@@ -1721,7 +1734,7 @@ function openSandboxTask(task){
 
   function _playFart(){
     try{
-      const ac=new(window.AudioContext||window.webkitAudioContext)();
+      const ac=getAC();
       const sr=ac.sampleRate;
       const master=ac.createGain();master.gain.value=1.0;master.connect(ac.destination);
 
