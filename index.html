@@ -447,17 +447,27 @@ drawStars();addEventListener('resize',drawStars);
 
   window.skipIntro=function(){
     if(_done)return;
-    if(!_musicStarted){
-      _musicStarted=true;
-      startIntroMusic();
-      const tap=document.getElementById('intro-tap');
-      if(tap)tap.textContent='Toque novamente para começar';
-      return;
-    }
     _doSkip();
   };
 
-  window.addEventListener('load',()=>{ frame(); });
+  window.addEventListener('load',()=>{
+    frame();
+    // cria o AC já na abertura e tenta resumir imediatamente
+    startIntroMusic();
+    _musicStarted=true;
+    // se o browser suspendeu, retoma no primeiro gesto
+    if(_ac && _ac.state==='suspended'){
+      const resume=()=>{
+        _ac&&_ac.resume();
+        document.removeEventListener('pointerdown',resume);
+        document.removeEventListener('keydown',resume);
+        document.removeEventListener('touchstart',resume);
+      };
+      document.addEventListener('pointerdown',resume);
+      document.addEventListener('keydown',resume);
+      document.addEventListener('touchstart',resume);
+    }
+  });
 })();
 
 const COLORS=['#ff4444','#ff8800','#ffcc00','#aaff44','#00cc55','#00ccff','#4488ff','#9933ff','#ff44aa','#ddddff','#889aaa','#335566','#cc7733','#44ffcc','#ff6699','#33ffee'];
