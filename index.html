@@ -158,6 +158,14 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050810;color:#fff;f
 <!-- REFEIT TASK OVERLAY -->
 <div id="refeit-ov" style="display:none;position:fixed;inset:0;z-index:600;background:#000;overflow:hidden">
   <canvas id="refeit-c" style="position:absolute;inset:0;width:100%;height:100%"></canvas>
+  <button ontouchstart="refeitTap(event)" onmousedown="refeitTap(event)"
+    style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#cc6600,#ff9900);border:none;color:#fff;
+    padding:20px 48px;border-radius:20px;font-size:1.3rem;font-weight:900;
+    cursor:pointer;box-shadow:0 0 24px #ff880066;letter-spacing:1px;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation;z-index:2">
+    🥪 DISTRIBUIR
+  </button>
   <button onclick="closeRefeitTask()" style="position:absolute;top:18px;right:18px;background:rgba(0,0,0,.7);border:1px solid #444;color:#888;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.8rem;z-index:2">✕ Fechar</button>
 </div>
 
@@ -1020,32 +1028,26 @@ function openRefeitTask(task){
   cancelAnimationFrame(_refeitRaf);
   refeitLoop();
   let _refeitLastPress=0;
-  _refeitListener=(e)=>{
-    if(['Escape','F1','F2','F3','F4','F5','F11','F12'].includes(e.key))return;
-    if(e.repeat)return;
+  function _doRefeit(){
     const now=Date.now();if(now-_refeitLastPress<1000)return;_refeitLastPress=now;
-    e.preventDefault();
     if(_refeitServed>=_refeitTotal)return;
     _refeitServed++;_refeitShake=8;
-    // spawn flying sandwich piece
     const sc2=document.getElementById('refeit-c');
     const cx=sc2.width/2, cy=sc2.height*0.54;
     const angle=(Math.random()*Math.PI*1.4)-Math.PI*0.7-Math.PI/2;
     const spd=8+Math.random()*6;
-    _refeitFlying.push({
-      x:cx, y:cy,
-      vx:Math.cos(angle)*spd,
-      vy:Math.sin(angle)*spd-4,
-      grav:0.28,
-      rot:Math.random()*Math.PI*2,
-      rotSpd:(Math.random()-0.5)*0.22,
-      size:18+Math.random()*12,
-      alpha:1
-    });
+    _refeitFlying.push({x:cx,y:cy,vx:Math.cos(angle)*spd,vy:Math.sin(angle)*spd-4,grav:0.28,rot:Math.random()*Math.PI*2,rotSpd:(Math.random()-0.5)*0.22,size:18+Math.random()*12,alpha:1});
     if(_refeitServed>=_refeitTotal){
       document.removeEventListener('keydown',_refeitListener);_refeitListener=null;
       setTimeout(()=>{closeRefeitTask();completeTask(_refeitTask);},700);
     }
+  }
+  window.refeitTap=(e)=>{e.preventDefault();_doRefeit();};
+  _refeitListener=(e)=>{
+    if(['Escape','F1','F2','F3','F4','F5','F11','F12'].includes(e.key))return;
+    if(e.repeat)return;
+    e.preventDefault();
+    _doRefeit();
   };
   document.addEventListener('keydown',_refeitListener);
 }
