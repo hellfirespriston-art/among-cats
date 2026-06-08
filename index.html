@@ -1148,10 +1148,29 @@ function sandboxLoop(){
   _sandboxRaf=requestAnimationFrame(sandboxLoop);
 }
 
+function _makePawCursor(){
+  const sz=64;
+  const off=document.createElement('canvas');
+  off.width=sz;off.height=sz;
+  const ctx=off.getContext('2d');
+  ctx.translate(sz/2,sz/2);
+  ctx.shadowColor='#ffaaaa';ctx.shadowBlur=8;
+  ctx.fillStyle='#f4a0a0';
+  ctx.beginPath();ctx.arc(0,8,18,0,Math.PI*2);ctx.fill();
+  const toes=[{x:-13,y:-10},{x:-5,y:-17},{x:5,y:-17},{x:13,y:-10}];
+  toes.forEach(t=>{ctx.beginPath();ctx.ellipse(t.x,t.y,6,8,0,0,Math.PI*2);ctx.fill();});
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#e08080';
+  ctx.beginPath();ctx.arc(0,10,11,0,Math.PI*2);ctx.fill();
+  toes.forEach(t=>{ctx.beginPath();ctx.ellipse(t.x,t.y,4,5,0,0,Math.PI*2);ctx.fill();});
+  return `url(${off.toDataURL()}) ${sz/2} ${sz/2}, pointer`;
+}
+
 function openSandboxTask(task){
   _sandboxTask=task;
   const ov=document.getElementById('sandbox-ov');
   ov.style.display='block';
+  ov.style.cursor=_makePawCursor();
   const cv=document.getElementById('sandbox-c');
   cv.width=window.innerWidth;cv.height=window.innerHeight;
   _initSandboxPoops(cv.width,cv.height);
