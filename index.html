@@ -184,8 +184,17 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050810;color:#fff;f
     </div>
     <div style="color:#550000;font-size:.6rem">🐾</div>
   </div>
+  <!-- mobile tap button -->
+  <button id="scratch-tap-btn" ontouchstart="scratchTap(event)" onmousedown="scratchTap(event)"
+    style="position:absolute;bottom:80px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(135deg,#cc2200,#ff4400);border:none;color:#fff;
+    padding:22px 52px;border-radius:20px;font-size:1.4rem;font-weight:900;
+    cursor:pointer;box-shadow:0 0 28px #ff220066;letter-spacing:2px;
+    user-select:none;-webkit-user-select:none;touch-action:manipulation">
+    🐾 ARRANHAR
+  </button>
   <!-- hint -->
-  <div id="scratch-hint" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:#550000;font-size:.82rem;letter-spacing:1px;text-align:center">Pressione <b style="color:#ff4400">CTRL</b> o mais rápido possível!</div>
+  <div id="scratch-hint" style="position:absolute;bottom:28px;left:50%;transform:translateX(-50%);color:#550000;font-size:.82rem;letter-spacing:1px;text-align:center">Pressione <b style="color:#ff4400">CTRL</b> ou toque o botão o mais rápido possível!</div>
   <!-- close -->
   <button onclick="closeScratchTask()" style="position:absolute;top:18px;right:18px;background:none;border:1px solid #330000;color:#550000;padding:5px 12px;border-radius:6px;cursor:pointer;font-size:.8rem">✕ Fechar</button>
 </div>
@@ -663,9 +672,17 @@ function openScratchTask(task){
   document.getElementById('scratch-hint').style.opacity='1';
   cancelAnimationFrame(_scratchRaf);
   scratchLoop();
+  window.scratchTap=(e)=>{
+    e.preventDefault();
+    _doScratch();
+  };
   _scratchListener=(e)=>{
     if(e.code!=='ControlLeft'&&e.code!=='ControlRight')return;
     e.preventDefault();
+    if(ov.style.display==='none')return;
+    _doScratch();
+  };
+  function _doScratch(){
     if(ov.style.display==='none')return;
     // add flash
     const cx=innerWidth*(.3+Math.random()*.4);
@@ -689,7 +706,7 @@ function openScratchTask(task){
       document.removeEventListener('keydown',_scratchListener);
       setTimeout(()=>{closeScratchTask();completeTask(_scratchTask);},350);
     }
-  };
+  }
   document.addEventListener('keydown',_scratchListener);
 }
 
