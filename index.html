@@ -1975,6 +1975,81 @@ function crewWinAnim(survivors){
   draw();
 }
 
+function drawAlienCat(ctx,x,y,s){
+  ctx.save();ctx.translate(x,y);
+  ctx.shadowColor='#00ff44';ctx.shadowBlur=60*s;
+  // tentacles
+  ctx.lineCap='round';
+  ctx.strokeStyle='#0d3a18';ctx.lineWidth=9*s;
+  ctx.beginPath();ctx.moveTo(-48*s,10*s);ctx.bezierCurveTo(-95*s,40*s,-115*s,90*s,-78*s,130*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(48*s,10*s);ctx.bezierCurveTo(95*s,40*s,115*s,90*s,78*s,130*s);ctx.stroke();
+  ctx.strokeStyle='#1a5c28';ctx.lineWidth=4*s;
+  ctx.beginPath();ctx.moveTo(-48*s,10*s);ctx.bezierCurveTo(-95*s,40*s,-115*s,90*s,-78*s,130*s);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(48*s,10*s);ctx.bezierCurveTo(95*s,40*s,115*s,90*s,78*s,130*s);ctx.stroke();
+  // body
+  ctx.beginPath();ctx.ellipse(0,30*s,52*s,75*s,0,0,Math.PI*2);
+  ctx.fillStyle='#0e2a14';ctx.fill();ctx.strokeStyle='#22aa44';ctx.lineWidth=2*s;ctx.stroke();
+  // bio spots
+  [[-18,20,6],[12,8,8],[-5,55,5],[28,42,4],[-30,48,5]].forEach(function(p){
+    ctx.beginPath();ctx.arc(p[0]*s,p[1]*s,p[2]*s,0,Math.PI*2);
+    ctx.fillStyle='rgba(0,255,80,0.2)';ctx.fill();
+  });
+  // head
+  ctx.shadowBlur=50*s;
+  ctx.beginPath();ctx.ellipse(0,-58*s,48*s,44*s,0,0,Math.PI*2);
+  ctx.fillStyle='#0e2a14';ctx.fill();ctx.strokeStyle='#22aa44';ctx.lineWidth=2*s;ctx.stroke();
+  // ridges
+  ctx.strokeStyle='#1a5c28';ctx.lineWidth=1.5*s;
+  for(var i=-2;i<=2;i++){ctx.beginPath();ctx.arc(i*12*s,-90*s,6*s,Math.PI,Math.PI*2);ctx.stroke();}
+  // ear left
+  ctx.beginPath();ctx.moveTo(-42*s,-82*s);ctx.lineTo(-24*s,-130*s);ctx.lineTo(-6*s,-82*s);ctx.closePath();
+  ctx.fillStyle='#0e2a14';ctx.fill();ctx.strokeStyle='#22aa44';ctx.lineWidth=2*s;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(-37*s,-85*s);ctx.lineTo(-24*s,-118*s);ctx.lineTo(-11*s,-85*s);ctx.closePath();
+  ctx.fillStyle='#ff2266';ctx.fill();
+  // ear right
+  ctx.beginPath();ctx.moveTo(6*s,-82*s);ctx.lineTo(24*s,-130*s);ctx.lineTo(42*s,-82*s);ctx.closePath();
+  ctx.fillStyle='#0e2a14';ctx.fill();ctx.strokeStyle='#22aa44';ctx.lineWidth=2*s;ctx.stroke();
+  ctx.beginPath();ctx.moveTo(11*s,-85*s);ctx.lineTo(24*s,-118*s);ctx.lineTo(37*s,-85*s);ctx.closePath();
+  ctx.fillStyle='#ff2266';ctx.fill();
+  // eye left
+  ctx.shadowColor='#ff8800';ctx.shadowBlur=18*s;
+  ctx.beginPath();ctx.ellipse(-20*s,-64*s,13*s,10*s,-0.15,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();
+  ctx.beginPath();ctx.ellipse(-20*s,-64*s,8*s,7*s,-0.15,0,Math.PI*2);ctx.fillStyle='#ff6600';ctx.fill();
+  ctx.beginPath();ctx.ellipse(-20*s,-64*s,3*s,6*s,0,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();
+  ctx.beginPath();ctx.arc(-14*s,-68*s,2*s,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  // eye right
+  ctx.beginPath();ctx.ellipse(20*s,-64*s,13*s,10*s,0.15,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();
+  ctx.beginPath();ctx.ellipse(20*s,-64*s,8*s,7*s,0.15,0,Math.PI*2);ctx.fillStyle='#ff6600';ctx.fill();
+  ctx.beginPath();ctx.ellipse(20*s,-64*s,3*s,6*s,0,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();
+  ctx.beginPath();ctx.arc(26*s,-68*s,2*s,0,Math.PI*2);ctx.fillStyle='#fff';ctx.fill();
+  // eye forehead alien
+  ctx.shadowColor='#00ffcc';ctx.shadowBlur=20*s;
+  ctx.beginPath();ctx.ellipse(0,-88*s,5*s,8*s,0,0,Math.PI*2);ctx.fillStyle='#000';ctx.fill();
+  ctx.beginPath();ctx.ellipse(0,-88*s,3*s,5*s,0,0,Math.PI*2);ctx.fillStyle='#00ffcc';ctx.fill();
+  // mouth
+  ctx.shadowBlur=10*s;ctx.strokeStyle='#00ff44';ctx.lineWidth=2.5*s;
+  ctx.beginPath();
+  ctx.moveTo(-24*s,-40*s);ctx.lineTo(-14*s,-30*s);ctx.lineTo(-6*s,-40*s);
+  ctx.lineTo(0,-27*s);ctx.lineTo(6*s,-40*s);ctx.lineTo(14*s,-30*s);ctx.lineTo(24*s,-40*s);
+  ctx.stroke();
+  // fangs
+  ctx.shadowBlur=0;ctx.fillStyle='#ccffcc';
+  ctx.beginPath();ctx.moveTo(-9*s,-40*s);ctx.lineTo(-6*s,-22*s);ctx.lineTo(-3*s,-40*s);ctx.fill();
+  ctx.beginPath();ctx.moveTo(3*s,-40*s);ctx.lineTo(6*s,-22*s);ctx.lineTo(9*s,-40*s);ctx.fill();
+  ctx.beginPath();ctx.moveTo(-20*s,-38*s);ctx.lineTo(-17*s,-26*s);ctx.lineTo(-14*s,-38*s);ctx.fill();
+  ctx.beginPath();ctx.moveTo(14*s,-38*s);ctx.lineTo(17*s,-26*s);ctx.lineTo(20*s,-38*s);ctx.fill();
+  // whiskers
+  ctx.strokeStyle='rgba(180,255,180,0.7)';ctx.lineWidth=1.2*s;
+  for(var w=0;w<3;w++){
+    ctx.beginPath();ctx.moveTo(-10*s,(-44+w*6)*s);ctx.lineTo(-72*s,(-50+w*7)*s);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(10*s,(-44+w*6)*s);ctx.lineTo(72*s,(-50+w*7)*s);ctx.stroke();
+  }
+  // nose
+  ctx.shadowColor='#ff44aa';ctx.shadowBlur=8*s;
+  ctx.beginPath();ctx.arc(0,-44*s,4*s,0,Math.PI*2);ctx.fillStyle='#ff44aa';ctx.fill();
+  ctx.restore();
+}
+
 function impWinAnim(imp){
   _cinStop=false;
   const ec=document.getElementById('crew-win-c');
@@ -2013,7 +2088,7 @@ function impWinAnim(imp){
     const eased=1-Math.pow(1-cp,3);
     const slideY=(1-eased)*120;
     ctx.globalAlpha=eased;
-    if(imp)drawCat(ctx,innerWidth/2,catY+slideY,{color:imp.color,eye:imp.eye,hat:imp.hat,pattern:imp.pattern,name:'',dir:1,scale:catScale});
+    drawAlienCat(ctx,innerWidth/2,catY+slideY,catScale*0.28);
     ctx.globalAlpha=1;
     prog+=0.016;
     if(prog<1.1){requestAnimationFrame(draw);}
@@ -2039,7 +2114,7 @@ function impWinAnim(imp){
           ctx.fillStyle='#ff4444';ctx.shadowColor='#ff0000';ctx.shadowBlur=50;
           ctx.fillText('Venceu!',innerWidth/2,innerHeight*0.92);
           ctx.shadowBlur=0;
-          if(imp)drawCat(ctx,innerWidth/2,catY,{color:imp.color,eye:imp.eye,hat:imp.hat,pattern:imp.pattern,name:'',dir:1,scale:catScale});
+          drawAlienCat(ctx,innerWidth/2,catY,catScale*0.28);
           ctx.globalAlpha=1;
           fadeAlpha-=0.035;
           if(fadeAlpha>0)requestAnimationFrame(fadeOut);
