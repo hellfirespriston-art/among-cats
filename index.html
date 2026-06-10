@@ -72,14 +72,16 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050810;color:#fff;f
 .killbtn.rdy{opacity:1;box-shadow:0 0 18px #ff335577}
 .killbtn:active{transform:scale(.95)}
 .usebtn{position:absolute;bottom:22px;left:50%;transform:translateX(-50%);background:#1a3ecc;border:none;color:#fff;padding:12px 22px;border-radius:14px;font-size:.85rem;font-weight:700;cursor:pointer;pointer-events:all;display:none;white-space:nowrap}
-#jzone{position:absolute;bottom:18px;left:18px;width:120px;height:120px;display:none;pointer-events:all}
-.jbase{position:absolute;inset:0;border-radius:50%;background:rgba(255,255,255,.06);border:2px solid rgba(255,255,255,.14)}
-.jthumb{position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(255,255,255,.28);border:2px solid rgba(255,255,255,.45);top:50%;left:50%;transform:translate(-50%,-50%);transition:transform .05s}
+#jzone{display:none!important}
+#dpad{position:absolute;bottom:14px;left:14px;width:154px;height:154px;display:none;pointer-events:all;user-select:none;-webkit-user-select:none;}
+.dpad-btn{position:absolute;width:50px;height:50px;background:rgba(255,255,255,.09);border:2px solid rgba(255,255,255,.22);border-radius:10px;color:rgba(255,255,255,.8);font-size:1.35rem;display:flex;align-items:center;justify-content:center;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent;transition:background .06s,transform .05s;}
+.dpad-btn.pressed{background:rgba(255,255,255,.28);transform:scale(.9);}
+#dpad-c{position:absolute;top:52px;left:52px;width:50px;height:50px;background:rgba(255,255,255,.03);border-radius:50%;pointer-events:none;}
 .notif{position:fixed;top:68px;left:50%;transform:translateX(-50%);background:rgba(255,50,50,.9);color:#fff;padding:9px 20px;border-radius:26px;font-weight:700;z-index:999;pointer-events:none;white-space:nowrap;font-size:.85rem;animation:fi 3.2s forwards}
 @keyframes fi{0%{opacity:0;transform:translateX(-50%) translateY(-8px)}12%{opacity:1;transform:translateX(-50%) translateY(0)}75%{opacity:1}100%{opacity:0}}
 @keyframes scanRot{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:0}}
-@media(max-width:600px){#customize{flex-direction:column}.cl{width:100%;border-right:none;border-bottom:1px solid #1a2a4a;padding:16px;flex-direction:row;gap:16px;justify-content:center}.cr{padding:14px}#jzone{display:block}}
+@media(max-width:600px){#customize{flex-direction:column}.cl{width:100%;border-right:none;border-bottom:1px solid #1a2a4a;padding:16px;flex-direction:row;gap:16px;justify-content:center}.cr{padding:14px}}
 #lobby-c{position:absolute;inset:0;pointer-events:none;}
 #lobby-log{position:absolute;bottom:22px;left:18px;display:flex;flex-direction:column;gap:5px;z-index:3;pointer-events:none;}
 .llog-item{padding:3px 10px;background:rgba(0,0,0,0.6);border-radius:7px;font-size:0.73rem;color:#8ab;white-space:nowrap;animation:fi 3.5s forwards;}
@@ -130,6 +132,13 @@ html,body{width:100%;height:100%;overflow:hidden;background:#050810;color:#fff;f
     </div>
     <button class="killbtn" id="killbtn" onclick="tryKill()">☠️ Matar</button>
     <button class="usebtn" id="usebtn" onclick="tryUse()">⚡ Usar</button>
+    <div id="dpad">
+      <button class="dpad-btn" id="dbU" style="top:0;left:52px;">▲</button>
+      <button class="dpad-btn" id="dbL" style="top:52px;left:0;">◀</button>
+      <div id="dpad-c"></div>
+      <button class="dpad-btn" id="dbR" style="top:52px;left:104px;">▶</button>
+      <button class="dpad-btn" id="dbD" style="top:104px;left:52px;">▼</button>
+    </div>
     <div id="jzone"><div class="jbase"></div><div class="jthumb" id="jthumb"></div></div>
   </div>
 </div>
@@ -2086,19 +2095,25 @@ function loop(ts){
 addEventListener('keydown',e=>{keys[e.code]=true;if((e.code==='KeyE'||e.code==='Space')&&G.phase==='play'){e.preventDefault();tryUse();}if(e.code==='KeyK'&&G.phase==='play')tryKill();});
 addEventListener('keyup',e=>{keys[e.code]=false;});
 
-// ══ JOYSTICK ══
+// ══ D-PAD ══
 let _jvx=0,_jvy=0;
-const jz=document.getElementById('jzone'),jt=document.getElementById('jthumb');
-function handleJoy(e){
-  const rect=jz.getBoundingClientRect(),cx=rect.left+rect.width/2,cy=rect.top+rect.height/2;
-  const touch=e.touches?e.touches[0]:e,dx=touch.clientX-cx,dy=touch.clientY-cy;
-  const d=Math.hypot(dx,dy),max=48,cl=Math.min(d,max),ndx=dx/Math.max(d,1),ndy=dy/Math.max(d,1);
-  jt.style.transform=`translate(calc(-50% + ${ndx*cl}px),calc(-50% + ${ndy*cl}px))`;
-  _jvx=d>8?ndx:0;_jvy=d>8?ndy:0;
+const _dp={U:false,D:false,L:false,R:false};
+function _dpUpdate(){_jvx=(_dp.R?1:0)-(_dp.L?1:0);_jvy=(_dp.D?1:0)-(_dp.U?1:0);}
+['U','D','L','R'].forEach(dir=>{
+  const btn=document.getElementById('db'+dir);
+  if(!btn)return;
+  const on=()=>{_dp[dir]=true;btn.classList.add('pressed');_dpUpdate();};
+  const off=()=>{_dp[dir]=false;btn.classList.remove('pressed');_dpUpdate();};
+  btn.addEventListener('touchstart',e=>{e.preventDefault();on();},{passive:false});
+  btn.addEventListener('touchend',off,{passive:true});
+  btn.addEventListener('touchcancel',off,{passive:true});
+  btn.addEventListener('mousedown',on);
+  btn.addEventListener('mouseup',off);
+  btn.addEventListener('mouseleave',off);
+});
+if('ontouchstart' in window||navigator.maxTouchPoints>0){
+  document.getElementById('dpad').style.display='block';
 }
-jz.addEventListener('touchstart',handleJoy,{passive:true});
-jz.addEventListener('touchmove',handleJoy,{passive:true});
-jz.addEventListener('touchend',()=>{_jvx=0;_jvy=0;jt.style.transform='translate(-50%,-50%)';},{passive:true});
 
 // ══ GAMEPAD (Xbox) ══
 let _gpBtnA=false,_gpBtnX=false,_gpBtnB=false;
