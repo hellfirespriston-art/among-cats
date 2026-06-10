@@ -605,6 +605,33 @@ const TDEFS=[
 
 // ══ GAME STATE ══
 let G={},gameRunning=false,keys={},camX=0,camY=0;
+// rastro de patinhas
+const _paws=[];
+const PAW_LIFE=3200; // ms até desaparecer
+function _spawnPaw(x,y,dir,color,side){
+  _paws.push({x,y,dir,color,side,born:Date.now(),angle:(Math.random()-.5)*.5});
+  if(_paws.length>220)_paws.shift();
+}
+function _drawPaw(ctx,x,y,s,a,color){
+  ctx.save();ctx.translate(x,y);ctx.rotate(a);ctx.globalAlpha*=.72;
+  const c=color||'rgba(255,255,255,.18)';
+  // almofada central
+  ctx.fillStyle=c;ctx.beginPath();ctx.ellipse(0,0,s*2.2,s*1.7,0,0,Math.PI*2);ctx.fill();
+  // 4 dedos
+  [[-s*1.8,-s*2.2],[s*-.6,-s*2.8],[s*.6,-s*2.8],[s*1.8,-s*2.2]].forEach(([dx,dy])=>{ctx.beginPath();ctx.ellipse(dx,dy,s*.9,s*.9,0,0,Math.PI*2);ctx.fill();});
+  ctx.restore();
+}
+function drawPawTrails(){
+  const now=Date.now();
+  for(let i=_paws.length-1;i>=0;i--){
+    const p=_paws[i];const age=(now-p.born)/PAW_LIFE;if(age>=1){_paws.splice(i,1);continue;}
+    const alpha=(1-age)*.22;
+    const {r,g,b}=h2rgb(p.color||'#ffffff');
+    ctx.save();ctx.globalAlpha=alpha;
+    _drawPaw(ctx,p.x-camX,p.y-camY,3.5,p.angle,`rgb(${r},${g},${b})`);
+    ctx.restore();
+  }
+}
 let raf=null,mtIv=null,_cfIv=null,_scIv=null,lastT=0;
 const BNAMES=['Bigodes','Fofinha','Garfield','Felix','Luna','Bolota'];
 const BCLRS=['#4488ff','#00cc55','#ff8800','#9933ff','#00ccff','#cc7733'];
@@ -664,7 +691,7 @@ function updBots(dt){
     }
     b.timer-=dt;if(b.timer<=0)pickT(b);
     const dx=b.tX-b.x,dy=b.tY-b.y,d=Math.hypot(dx,dy);
-    if(d>5){const nx=b.x+dx/d*b.spd,ny=b.y+dy/d*b.spd;if(walkable(nx,b.y))b.x=nx;if(walkable(b.x,ny))b.y=ny;b.dir=dx>0?1:-1;b.walkPhase=(b.walkPhase||0)+.3;}else b.walkPhase=0;
+    if(d>5){const nx=b.x+dx/d*b.spd,ny=b.y+dy/d*b.spd;if(walkable(nx,b.y))b.x=nx;if(walkable(b.x,ny))b.y=ny;b.dir=dx>0?1:-1;const bwp=(b.walkPhase||0)+.3;b.walkPhase=bwp;if(Math.floor(bwp*2)%7===0){const s=Math.cos(bwp)>0?1:-1;_spawnPaw(b.x+s*7,b.y+10,b.dir,b.color,s);}}else b.walkPhase=0;
   });
 }
 
@@ -849,7 +876,7 @@ function updPlayer(dt){
   const nx=p.x+vx*p.spd,ny=p.y+vy*p.spd;
   const moved=(vx&&walkable(nx,p.y))||(vy&&walkable(p.x,ny));
   if(vx&&walkable(nx,p.y))p.x=nx;if(vy&&walkable(p.x,ny))p.y=ny;
-  if(moved){_playStep();p.walkPhase=(p.walkPhase||0)+.32;}else p.walkPhase=0;
+  if(moved){_playStep();const wp=(p.walkPhase||0)+.32;p.walkPhase=wp;if(Math.floor(wp/.32)!==Math.floor((wp-.32)/.32)&&Math.floor(wp*2)%6===0){const side=Math.cos(wp)>0?1:-1;_spawnPaw(p.x+side*7,p.y+10,p.dir,p.color,side);}}else p.walkPhase=0;
   if(vx)p.dir=vx>0?1:-1;
   if(p.isImp&&p.killCD>0)p.killCD-=dt/60;
   camX=Math.max(0,Math.min(p.x-gc.width/2,WW-gc.width));
@@ -2240,7 +2267,7 @@ function drawLighting(){
 function loop(ts){
   if(!gameRunning)return;
   const dt=Math.min((ts-lastT)/16,3);lastT=ts;
-  updPlayer(dt);updBots(dt);updDeathAnims();drawMap();drawBodies();drawDeathAnims();drawChars();drawLighting();drawHUD2();
+  updPlayer(dt);updBots(dt);updDeathAnims();drawMap();drawPawTrails();drawBodies();drawDeathAnims();drawChars();drawLighting();drawHUD2();
   raf=requestAnimationFrame(loop);
 }
 
