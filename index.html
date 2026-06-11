@@ -2251,6 +2251,14 @@ function drawMinimap(){
   G.tasks.forEach(t=>{ctx.fillStyle=t.done?'#00ff88':'#ffcc33';ctx.beginPath();ctx.arc(ox+t.x*sc,oy+t.y*sc,2.2,0,Math.PI*2);ctx.fill();});
   // botão de emergência
   ctx.fillStyle='#ff4444';ctx.beginPath();ctx.arc(ox+EMG.x*sc,oy+EMG.y*sc,2.6,0,Math.PI*2);ctx.fill();
+  // bots no minimap
+  G.bots.forEach(b=>{
+    if(!b.alive)return;
+    // impostor: só visível para o próprio impostor
+    if(b.isImp&&!G.player.isImp)return;
+    ctx.fillStyle=b.isImp?'#ff3355':'#4488ff';
+    ctx.beginPath();ctx.arc(ox+b.x*sc,oy+b.y*sc,2.4,0,Math.PI*2);ctx.fill();
+  });
   // player (pisca)
   const p=G.player;if(p.alive){const pl=Math.sin(Date.now()/250)*.4+.6;ctx.fillStyle=`rgba(0,255,170,${pl})`;ctx.beginPath();ctx.arc(ox+p.x*sc,oy+p.y*sc,3.2,0,Math.PI*2);ctx.fill();ctx.strokeStyle='#fff';ctx.lineWidth=.8;ctx.stroke();}
   ctx.restore();
