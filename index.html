@@ -733,13 +733,13 @@ const WALK=[...ROOMS,...CORR];
 function walkable(x,y,m=5){return WALK.some(r=>x>=r.x+m&&x<=r.x+r.w-m&&y>=r.y+m&&y<=r.y+r.h-m);}
 const EMG={x:1178,y:903,r:26}; // centro da mesa hexagonal de Reuniões (r.x+W*.5, r.y+H*.62)
 const TDEFS=[
-  {id:'arranha', x:381, y:540, lbl:'🐾 Arranhar poste',   clr:'#8B5A2B'},
-  {id:'camas',   x:1245,y:270, lbl:'😴 Arrumar camas',    clr:'#aa44ff'},
-  {id:'petisco', x:2145,y:825, lbl:'🍖 Servir petiscos',  clr:'#ff6633'},
-  {id:'caixas',  x:1245,y:1365,lbl:'💩 Limpar caixa de areia', clr:'#ffaa00'},
-  {id:'wires',   x:1995,y:150, lbl:'🔌 Conectar fios',    clr:'#ffdd33'},
-  {id:'scan',    x:2370,y:285, lbl:'🩻 Escanear gatinho', clr:'#aa44ff'},
-  {id:'coffee',  x:2010,y:660, lbl:'☕ Café do astronauta',clr:'#aa6633'},
+  {id:'arranha', x:381, y:540, lbl:'🐾 Arranhar poste',   clr:'#8B5A2B', ic:'🪵'},
+  {id:'camas',   x:1245,y:270, lbl:'😴 Arrumar camas',    clr:'#aa44ff', ic:'🛏️'},
+  {id:'petisco', x:2145,y:825, lbl:'🍖 Servir petiscos',  clr:'#ff6633', ic:'🐟'},
+  {id:'caixas',  x:1245,y:1365,lbl:'💩 Limpar caixa de areia', clr:'#ffaa00', ic:'🧹'},
+  {id:'wires',   x:1995,y:150, lbl:'🔌 Conectar fios',    clr:'#ffdd33', ic:'🔌'},
+  {id:'scan',    x:2370,y:285, lbl:'🩻 Escanear gatinho', clr:'#aa44ff', ic:'🩻'},
+  {id:'coffee',  x:2010,y:660, lbl:'☕ Café do astronauta',clr:'#aa6633', ic:'☕'},
 ];
 // alçapões de teleporte — um por sala, qualquer gato pode usar (setas "IN" + menu "OUT")
 const VENTS=[
@@ -2728,11 +2728,20 @@ function drawMap(){
     ctx.font='bold 10px Arial';ctx.fillStyle='rgba(255,255,255,.26)';ctx.textAlign='center';ctx.fillText(r.lbl,r.x+r.w/2-camX,r.y+16-camY);
     if(r.em){const bx=EMG.x-camX,by=EMG.y-camY,p=Math.sin(Date.now()/400)*.3+.7;ctx.beginPath();ctx.arc(bx,by,EMG.r,0,Math.PI*2);ctx.fillStyle=`rgba(255,${~~(50*p)},${~~(50*p)},${p*.88})`;ctx.fill();ctx.strokeStyle='#ff6666';ctx.lineWidth=2;ctx.stroke();ctx.font='12px Arial';ctx.textAlign='center';ctx.fillText('🚨',bx,by+5);}
   });
+  ctx.textBaseline='middle';
   G.tasks.forEach(t=>{
     const tx=t.x-camX,ty=t.y-camY;
-    if(t.done){ctx.beginPath();ctx.arc(tx,ty,13,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,.1)';ctx.fill();ctx.strokeStyle='#00ff88';ctx.lineWidth=2;ctx.stroke();ctx.font='12px Arial';ctx.textAlign='center';ctx.fillText('✅',tx,ty+5);}
-    else{const p=Math.sin(Date.now()/600)*.35+.65;ctx.beginPath();ctx.arc(tx,ty,13,0,Math.PI*2);const {r,g,b}=h2rgb(t.clr);ctx.fillStyle=`rgba(${r},${g},${b},${p*.33})`;ctx.fill();ctx.strokeStyle=t.clr;ctx.lineWidth=2;ctx.stroke();ctx.font='12px Arial';ctx.textAlign='center';ctx.fillText('❗',tx,ty+4);}
+    if(t.done){
+      ctx.beginPath();ctx.arc(tx,ty,19,0,Math.PI*2);ctx.fillStyle='rgba(0,255,136,.12)';ctx.fill();ctx.strokeStyle='#00ff88';ctx.lineWidth=2.5;ctx.stroke();
+      ctx.font='20px Arial';ctx.textAlign='center';ctx.fillText('✅',tx,ty+1);
+    } else {
+      const p=Math.sin(Date.now()/600)*.35+.65,{r,g,b}=h2rgb(t.clr);
+      ctx.beginPath();ctx.arc(tx,ty,22+p*4,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},${p*.16})`;ctx.fill(); // halo pulsante
+      ctx.beginPath();ctx.arc(tx,ty,21,0,Math.PI*2);ctx.fillStyle=`rgba(${r},${g},${b},${p*.32})`;ctx.fill();ctx.strokeStyle=t.clr;ctx.lineWidth=2.5;ctx.stroke();
+      ctx.font='24px Arial';ctx.textAlign='center';ctx.fillText(t.ic||'❗',tx,ty+1);
+    }
   });
+  ctx.textBaseline='alphabetic';
   // alçapões de teleporte (todos enxergam) — buraco + seta "IN" pulsando
   VENTS.forEach((v,i)=>{
     const vx=v.x-camX,vy=v.y-camY;
