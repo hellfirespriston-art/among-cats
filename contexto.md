@@ -239,8 +239,8 @@ Impostor só mata quando **ninguém está olhando**.
 
 ## Roleta Russa — quando o PLAYER é o impostor (13/06/2026)
 
-- Bots tripulantes encontram corpos (`dst(b,bo)<62`) e chamam reunião automaticamente.
-- Em `meeting()`, se `G.player.isImp && alive` → chama `russianRoulette()` em vez da votação normal.
+- Bots tripulantes encontram corpos (`dst(b,bo)<62`) e chamam reunião automaticamente — passam `byNpc=true` pro `meeting()`.
+- Em `meeting()`, se `(G.player.isImp && alive) || byNpc` → chama `russianRoulette()` em vez da votação normal. Ou seja: **qualquer reunião convocada por NPC sorteia alguém aleatoriamente**, mesmo com o player inocente. Reunião convocada pelo player inocente = votação normal.
 - `russianRoulette()` monta grade de cards de todos os vivos (sem onclick), gira um destaque que desacelera (`stops=alive.length*3+pick`) e para num sorteado → `endMeeting(alive[idx].id)` após 1400ms.
 - Sons: `_playRRTick()` (blip 900Hz quadrado) e `_playRRBang()` (ruído+sawtooth = tiro).
 - CSS: `.vcard.roulette-on` (destaque amarelo) e `.vcard.roulette-pick` (vermelho pulsante).

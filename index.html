@@ -863,7 +863,7 @@ function updBots(dt){
   G.bots.forEach(b=>{
     if(!b.alive)return;
     if(G.phase!=='play')return; // reunião começou no meio do loop
-    if(!b.isImp){const bd=G.bodies.find(bo=>!bo.reported&&dst(b,bo)<62);if(bd){bd.reported=true;showNotif('💀 '+b.name+' encontrou um corpo!');meeting('body',b.name,bd);return;}}
+    if(!b.isImp){const bd=G.bodies.find(bo=>!bo.reported&&dst(b,bo)<62);if(bd){bd.reported=true;showNotif('💀 '+b.name+' encontrou um corpo!');meeting('body',b.name,bd,true);return;}}
     if(b.isImp){
       b.killCD-=dt/60;
       b.sabT-=dt/60;
@@ -2222,7 +2222,7 @@ window.closeSandboxTask=()=>{
 
 // ══ MEETING ══
 let _rrTimer=null;
-function meeting(type,caller,body){
+function meeting(type,caller,body,byNpc){
   closeVentMenu();
   G.phase='meeting';clearInterval(mtIv);if(_rrTimer){clearTimeout(_rrTimer);_rrTimer=null;}
   if(G.sabotage){G.sabotage=null;G.sabFix=0;} // reunião restaura as luzes
@@ -2233,7 +2233,7 @@ function meeting(type,caller,body){
   document.getElementById('mtitle').textContent=type==='body'?'💀 CORPO ENCONTRADO!':'🚨 REUNIÃO DE EMERGÊNCIA!';
   document.getElementById('msub').textContent=type==='body'?`${caller} encontrou ${body.name}. Quem foi?`:`${caller} convocou uma reunião. Discutam!`;
   G.voted=false;
-  if(G.player.isImp&&G.player.alive){russianRoulette();return;} // 🎲 você é o impostor → a sorte decide
+  if((G.player.isImp&&G.player.alive)||byNpc){russianRoulette();return;} // 🎲 você é impostor OU um NPC convocou → a sorte decide
   const vg=document.getElementById('vgrid');vg.innerHTML='';
   const alive=[G.player,...G.bots].filter(c=>c.alive);
   alive.forEach(c=>{
