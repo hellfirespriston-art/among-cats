@@ -12,11 +12,18 @@
 ✅ Joystick mobile
 ✅ Câmera que segue o jogador
 
+[v0.2 - 13/06/2026]
+✅ Sistema de visão "olhinho" 👁️ — impostor só mata sem testemunhas (raycast c/ paredes)
+✅ IA do impostor caça quem NÃO tem olhinho
+✅ Roleta russa quando o PLAYER é o impostor (bots chamam reunião ao achar corpo)
+✅ Salas repaginadas estilo The Skeld (reuniões, lab, jardim, refeitório, abrigo)
+✅ Lobby vira foguete com turbinas animadas soltando fogo + estrelas subindo
+
 ----------------------------------------
 GAMEPLAY
 ----------------------------------------
 [ ] Modo multiplayer local (2 jogadores no mesmo teclado)
-[ ] Mais salas no mapa (laboratório, nave, jardim)
+✅ Mais salas no mapa (laboratório, jardim) — repaginadas em v0.2
 [ ] Tarefas mais elaboradas: memória, sequência de teclas
 [ ] Sabotagem pelo impostor (apagar luz, travar portas)
 [ ] Vent system: impostores podem usar ventilações
@@ -33,7 +40,7 @@ VISUAL / AUDIO
 [ ] Efeito de piscar quando bots se movem perto
 [ ] Fundo de estrelas animado no mapa
 [ ] Transição de tela com fade suave
-[ ] Sala de espera animada antes de iniciar
+✅ Sala de espera animada antes de iniciar — virou o lobby-foguete (v0.2)
 [ ] Efeito de sangue/rastro quando há corpo
 [ ] Skins desbloqueáveis (ex: gatinho ninja, astronauta, robô)
 
