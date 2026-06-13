@@ -225,22 +225,23 @@ Usado nas tarefas: caixa de areia e camas.
 
 ---
 
-## Sistema de Visão — "olhinho" 👁️ (13/06/2026)
+## Sistema de Visão "olhinho" + Testemunha corre pro botão 👁️🏃 (13/06/2026, revisado)
 
-Impostor só mata quando **ninguém está olhando**.
+**Matar é PERMITIDO mesmo com testemunhas.** O olhinho agora é um AVISO ("se matar aqui, alguém vê e te denuncia"), não um bloqueio. Quem presencia o crime corre pro botão.
 
-- `VIS=300` raio de visão; `_losClear(ax,ay,bx,by)` faz raycast usando `walkable()` (parede bloqueia a linha de visão).
-- `sees(o,target)` — tripulante inocente vivo `o` vê `target` se dentro do raio e sem parede no meio. Impostor não testemunha; morto/fantasma não vê.
-- `watched(target,ignore)` — true se algum tripulante (exceto `ignore`) vê o alvo.
-- `_drawEye(sx,sy)` desenha o 👁️ pulsante acima de qualquer gato observado — **inclusive acima do assassino**.
-- `kill(t,by)` aborta (`return false`) se `watched(t,by)||watched(by,t)`.
-- `tryKill()` (player) avisa "👁️ Alguém está de olho!" se bloqueado.
-- IA do bot impostor: filtra alvos por `!watched(c,b)&&!watched(b,c)` e na caça prioriza quem **não** tem olhinho (`free=crew.filter(c=>!watched(c,b))`).
+- `VIS` (dinâmico) raio de visão; `_losClear(ax,ay,bx,by)` faz raycast usando `walkable()` (parede bloqueia a linha de visão).
+- `sees(o,target)` / `watched(target,ignore)` — usados só pro indicador `_drawEye` (👁️) e pro aviso "👁️ Mas alguém viu...". **Não bloqueiam mais o kill.**
+- `kill(t,by)` captura as testemunhas (`wits`) **antes** de matar (pois a vítima morta deixa de ser "vista") e chama `_startRush(wits,by)`.
+- `_startRush(wits,killer)`: marca `G.rushKiller=killer.id`; cada testemunha NPC ganha `toBtn=true`+`panic=true`; player testemunha vê aviso pra correr e denunciar.
+- No `updBots`, bot com `toBtn` ignora a IA normal: corre 1.5× pro `EMG`, **recruta por contato** (qualquer vivo a <28px, exceto o assassino, vira `toBtn`), e ao chegar (<46px) chama `_btnPressed()`.
+- `_btnPressed()`: conta `crowd` = bots vivos com `toBtn`. **1 testemunha → `meeting('accuse',…,killerId)`** → `_accuseEject` ejeta o assassino direto. **Turba (≥2) → `meeting('chaos')`** → `russianRoulette()` (sorteio).
+- Player perto do 🚨 com `G.rushKiller` setado: botão vira "🚨 Denunciar!"; aperta sozinho → `accuse`; se há gente correndo (`crowd≥1`) → `chaos`.
+- `_drawPanic(sx,sy)` desenha ❗ pulsante acima de quem está correndo. Flags zeradas em `meeting()` e `endMeeting()`.
 
-## Roleta Russa — quando o PLAYER é o impostor (13/06/2026)
+## Roleta Russa — quando o PLAYER é o impostor / turba / NPC convoca (13/06/2026)
 
 - Bots tripulantes encontram corpos (`dst(b,bo)<62`) e chamam reunião automaticamente — passam `byNpc=true` pro `meeting()`.
-- Em `meeting()`, se `(G.player.isImp && alive) || byNpc` → chama `russianRoulette()` em vez da votação normal. Ou seja: **qualquer reunião convocada por NPC sorteia alguém aleatoriamente**, mesmo com o player inocente. Reunião convocada pelo player inocente = votação normal.
+- Em `meeting()`, se `type==='chaos' || (G.player.isImp && alive) || byNpc` → chama `russianRoulette()` em vez da votação normal. Ou seja: turba no botão, player impostor, ou reunião convocada por NPC → sorteio. Reunião convocada pelo player inocente (sem testemunho) = votação normal. `type==='accuse'` (testemunha sozinha) → `_accuseEject` ejeta o assassino sem votar.
 - `russianRoulette()` monta grade de cards de todos os vivos (sem onclick), gira um destaque que desacelera (`stops=alive.length*3+pick`) e para num sorteado → `endMeeting(alive[idx].id)` após 1400ms.
 - Sons: `_playRRTick()` (blip 900Hz quadrado) e `_playRRBang()` (ruído+sawtooth = tiro).
 - CSS: `.vcard.roulette-on` (destaque amarelo) e `.vcard.roulette-pick` (vermelho pulsante).

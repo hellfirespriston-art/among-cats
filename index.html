@@ -731,7 +731,7 @@ const CORR=[
 ];
 const WALK=[...ROOMS,...CORR];
 function walkable(x,y,m=5){return WALK.some(r=>x>=r.x+m&&x<=r.x+r.w-m&&y>=r.y+m&&y<=r.y+r.h-m);}
-const EMG={x:1176,y:630,r:54};
+const EMG={x:1178,y:903,r:26}; // centro da mesa hexagonal de Reuniões (r.x+W*.5, r.y+H*.62)
 const TDEFS=[
   {id:'arranha', x:381, y:540, lbl:'🐾 Arranhar poste',   clr:'#8B5A2B'},
   {id:'camas',   x:1245,y:270, lbl:'😴 Arrumar camas',    clr:'#aa44ff'},
@@ -810,7 +810,7 @@ function startGame(){
   G={
     player:{id:'p',x:381,y:645,spd:4.2,color:C.color,eye:C.eye,hat:C.hat,pattern:C.pattern,name:C.name,acc:C.acc,dir:1,alive:true,ghost:false,isPlayer:true,isImp:pIsImp,killCD:pIsImp?DF.killCD0:9999,tasksDone:0},
     bots:[],tasks:[],bodies:[],deathAnims:[],emergUsed:false,phase:'role',voted:false,
-    df:DF,sabotage:null,sabCD:25,sabFix:0,sus:{},shake:0,sabFlick:0,inHatch:null,
+    df:DF,sabotage:null,sabCD:25,sabFix:0,sus:{},shake:0,sabFlick:0,inHatch:null,rushKiller:null,btnDone:false,
   };
 
   for(let i=0;i<5;i++){
@@ -858,18 +858,44 @@ function watchers(target,ignore){
 }
 function watched(target,ignore){return watchers(target,ignore)>0;}
 
+// ══ TESTEMUNHA → CORRIDA PRO BOTÃO ══
+// Quem vê um assassinato corre pro 🚨. Testemunha sozinha denuncia o assassino;
+// se vira turba (gente que encostou no caminho), rola sorteio pra ver quem sai.
+function _startRush(wits,killer){
+  if(!wits||!wits.length)return;
+  G.rushKiller=killer.id;G.btnDone=false;
+  wits.forEach(o=>{
+    if(o.isPlayer)showNotif('👁️ Você viu o crime! Corra ao 🚨 e aperte pra denunciar '+killer.name+'!');
+    else{o.toBtn=true;o.panic=true;}
+  });
+}
+function _btnPressed(){ // um bot em pânico alcançou o botão
+  const killerId=G.rushKiller;
+  const crowd=G.bots.filter(b=>b.alive&&b.toBtn).length;
+  if(crowd>=2)meeting('chaos','A turba',null);            // virou tumulto → sorteio
+  else meeting('accuse','A testemunha',null,false,killerId); // testemunha sozinha → ejeta o assassino
+}
+
 function updBots(dt){
   if(G.phase!=='play')return;
   G.bots.forEach(b=>{
     if(!b.alive)return;
     if(G.phase!=='play')return; // reunião começou no meio do loop
+    if(b.toBtn){ // 🏃 testemunha em pânico correndo pro botão de emergência
+      b.tX=EMG.x;b.tY=EMG.y;
+      G.bots.forEach(o=>{if(o!==b&&o.alive&&!o.toBtn&&o.id!==G.rushKiller&&dst(o,b)<28){o.toBtn=true;o.panic=true;}}); // quem encosta no caminho é arrastado junto
+      if(!G.btnDone&&dst(b,EMG)<46){G.btnDone=true;_btnPressed();return;}
+      const dx=EMG.x-b.x,dy=EMG.y-b.y,d=Math.hypot(dx,dy);
+      if(d>5){const sp=b.spd*1.5,nx=b.x+dx/d*sp,ny=b.y+dy/d*sp;if(walkable(nx,b.y))b.x=nx;if(walkable(b.x,ny))b.y=ny;b.dir=dx>0?1:-1;b.walkPhase=(b.walkPhase||0)+.4;}
+      return;
+    }
     if(!b.isImp){const bd=G.bodies.find(bo=>!bo.reported&&dst(b,bo)<62);if(bd){bd.reported=true;showNotif('💀 '+b.name+' encontrou um corpo!');meeting('body',b.name,bd,true);return;}}
     if(b.isImp){
       b.killCD-=dt/60;
       b.sabT-=dt/60;
       if(b.sabT<=0&&!G.sabotage){startSabotage();b.sabT=40+Math.random()*30;}
-      if(b.killCD<=0){const tgts=[G.player,...G.bots].filter(c=>c.alive&&!c.isImp&&c.id!==b.id&&dst(b,c)<52&&!watched(c,b)&&!watched(b,c));if(tgts.length&&kill(tgts[0],b)){b.killCD=G.df.botKillCD;const vi=VENTS.findIndex(v=>dst(b,v)<130);if(vi>=0&&Math.random()<.5){const o=VENTS[(vi+1)%VENTS.length];b.x=o.x;b.y=o.y;_playVent();}pickT(b);return;}}
-      if(b.killCD<2.5*G.df.huntR){const crew=[G.player,...G.bots].filter(c=>c.alive&&!c.isImp);if(crew.length){const free=crew.filter(c=>!watched(c,b));const pool=free.length?free:crew;const nr=pool.sort((a,c)=>dst(b,a)-dst(b,c))[0];b.tX=nr.x;b.tY=nr.y;}}
+      if(b.killCD<=0){const tgts=[G.player,...G.bots].filter(c=>c.alive&&!c.isImp&&c.id!==b.id&&dst(b,c)<52);if(tgts.length&&kill(tgts[0],b)){b.killCD=G.df.botKillCD;const vi=VENTS.findIndex(v=>dst(b,v)<130);if(vi>=0&&Math.random()<.5){const o=VENTS[(vi+1)%VENTS.length];b.x=o.x;b.y=o.y;_playVent();}pickT(b);return;}}
+      if(b.killCD<2.5*G.df.huntR){const crew=[G.player,...G.bots].filter(c=>c.alive&&!c.isImp);if(crew.length){const nr=crew.sort((a,c)=>dst(b,a)-dst(b,c))[0];b.tX=nr.x;b.tY=nr.y;}}
     } else if(G.sabotage){
       // tripulantes correm pro painel de luz e consertam
       if(Math.random()<.012){b.tX=LPANEL.x+(Math.random()-.5)*30;b.tY=LPANEL.y+34+(Math.random()-.5)*20;b.timer=600;}
@@ -926,7 +952,8 @@ function _playDeath(isPlayer){
 
 function kill(t,by){
   if(t.isPlayer&&G.inHatch!=null)return false; // dentro do alçapão = seguro
-  if(watched(t,by)||watched(by,t))return false; // 👁️ alguém está de olho — não dá pra matar
+  // 👁️ TESTEMUNHAS: quem enxerga a vítima no instante da morte (capturado ANTES de cair, pois sees() exige alvo vivo)
+  const wits=[G.player,...G.bots].filter(o=>o!==t&&o!==by&&o.alive&&!o.ghost&&!o.isImp&&dst(o,t)<VIS&&_losClear(o.x,o.y,t.x,t.y));
   t.alive=false;
   _playDeath(t.isPlayer);
   G.shake=12;
@@ -945,6 +972,7 @@ function kill(t,by){
     if(d<240&&Math.random()<.75){G.sus[by.id]=(G.sus[by.id]||0)+(d<130?3:2);pickT(w);}
   });
   if(t.isPlayer){t.ghost=true;_playGhost();showNotif(`😿 ${by.name} te eliminou! Agora você é um fantasma 👻 — complete tarefas!`);}
+  _startRush(wits,by); // 🏃 testemunhas entram em pânico e correm pro botão
   checkWin();
   return true;
 }
@@ -1204,7 +1232,7 @@ function updUseBtn(){
   const p=G.player,ub=document.getElementById('usebtn');
   if(!p.alive||G.phase!=='play'){ub.style.display='none';return;}
   if(G.sabotage&&!p.isImp&&dst(p,LPANEL)<60){ub.style.display='block';ub.textContent='💡 Consertar luzes';return;}
-  if(dst(p,EMG)<48&&!G.emergUsed){ub.style.display='block';ub.textContent='🚨 Reunião!';return;}
+  if(dst(p,EMG)<48&&!G.emergUsed){ub.style.display='block';ub.textContent=G.rushKiller?'🚨 Denunciar!':'🚨 Reunião!';return;}
   const nT=G.tasks.find(t=>!t.done&&dst(p,t)<42);
   if(nT){ub.style.display='block';ub.textContent='⚡ '+nT.lbl;return;}
   const nB=G.bodies.find(b=>!b.reported&&dst(p,b)<46);
@@ -1215,7 +1243,11 @@ function updUseBtn(){
 function tryUse(){
   const p=G.player;if(G.phase!=='play'||!p.alive)return;
   if(G.sabotage&&!p.isImp&&dst(p,LPANEL)<60){fixSabotage(p.name);return;}
-  if(dst(p,EMG)<48&&!G.emergUsed){G.emergUsed=true;meeting('emergency',p.name,null);return;}
+  if(dst(p,EMG)<48&&!G.emergUsed){
+    if(G.rushKiller){const crowd=G.bots.filter(b=>b.alive&&b.toBtn).length;if(crowd>=1)meeting('chaos',p.name);else meeting('accuse',p.name,null,false,G.rushKiller);} // você presenciou: sozinho denuncia, com turba vira sorteio
+    else{G.emergUsed=true;meeting('emergency',p.name,null);}
+    return;
+  }
   const nT=G.tasks.find(t=>!t.done&&dst(p,t)<42);if(nT){openTask(nT);return;}
   const nB=G.bodies.find(b=>!b.reported&&dst(p,b)<46);if(nB){nB.reported=true;meeting('body',p.name,nB);return;}
 }
@@ -1224,8 +1256,8 @@ function tryKill(){
   const p=G.player;if(!p.isImp||!p.alive||p.killCD>0)return;
   const t=G.bots.filter(b=>b.alive&&!b.isImp&&dst(p,b)<58).sort((a,b)=>dst(p,a)-dst(p,b))[0];
   if(!t){showNotif('Chegue mais perto de alguém!');return;}
-  if(watched(t,p)||watched(p,t)){showNotif('👁️ Alguém está de olho! Espere ninguém ver.');return;}
-  if(kill(t,p)){p.killCD=18;showNotif('☠️ '+t.name+' eliminado!');}
+  const seen=watched(t,p); // checa ANTES de matar (depois a vítima morre e ninguém "vê" mais)
+  if(kill(t,p)){p.killCD=18;showNotif('☠️ '+t.name+' eliminado!'+(seen?' 👁️ Mas alguém viu...':''));}
 }
 
 // ══ SABOTAGEM E DUTOS (poderes do impostor) ══
@@ -2222,18 +2254,21 @@ window.closeSandboxTask=()=>{
 
 // ══ MEETING ══
 let _rrTimer=null;
-function meeting(type,caller,body,byNpc){
+function meeting(type,caller,body,byNpc,forceEj){
   closeVentMenu();
   G.phase='meeting';clearInterval(mtIv);if(_rrTimer){clearTimeout(_rrTimer);_rrTimer=null;}
+  G.bots.forEach(b=>{b.toBtn=false;b.panic=false;});G.btnDone=false; // encerra qualquer corrida pro botão
   if(G.sabotage){G.sabotage=null;G.sabFix=0;} // reunião restaura as luzes
   clearInterval(_cfIv);_cfIv=null;
   document.getElementById('task-ov').classList.remove('active');
   document.getElementById('usebtn').style.display='none';
   const ov=document.getElementById('meet-ov');ov.classList.add('active');
-  document.getElementById('mtitle').textContent=type==='body'?'💀 CORPO ENCONTRADO!':'🚨 REUNIÃO DE EMERGÊNCIA!';
-  document.getElementById('msub').textContent=type==='body'?`${caller} encontrou ${body.name}. Quem foi?`:`${caller} convocou uma reunião. Discutam!`;
+  document.getElementById('mtitle').textContent=type==='body'?'💀 CORPO ENCONTRADO!':type==='accuse'?'👁️ TESTEMUNHA!':type==='chaos'?'🎲 TUMULTO NO BOTÃO!':'🚨 REUNIÃO DE EMERGÊNCIA!';
+  document.getElementById('msub').textContent=type==='body'?`${caller} encontrou ${body.name}. Quem foi?`:type==='accuse'?'Uma testemunha viu tudo e apertou o botão — o culpado vai voar! 😼':type==='chaos'?'Todo mundo correu pro botão e virou bagunça... a sorte decide quem sai 🎲':`${caller} convocou uma reunião. Discutam!`;
   G.voted=false;
-  if((G.player.isImp&&G.player.alive)||byNpc){russianRoulette();return;} // 🎲 você é impostor OU um NPC convocou → a sorte decide
+  if(type==='accuse'){G.rushKiller=null;_accuseEject(forceEj);return;} // 👁️ testemunha sozinha → ejeta o assassino direto
+  if(type==='chaos'||(G.player.isImp&&G.player.alive)||byNpc){G.rushKiller=null;russianRoulette();return;} // 🎲 tumulto / você é impostor / NPC convocou → a sorte decide
+  G.rushKiller=null;
   const vg=document.getElementById('vgrid');vg.innerHTML='';
   const alive=[G.player,...G.bots].filter(c=>c.alive);
   alive.forEach(c=>{
@@ -2264,6 +2299,7 @@ function doVote(tid,card){
 
 function endMeeting(ejId){
   clearInterval(mtIv);if(_rrTimer){clearTimeout(_rrTimer);_rrTimer=null;}document.getElementById('meet-ov').classList.remove('active');G.phase='play';
+  G.bots.forEach(b=>{b.toBtn=false;b.panic=false;});G.btnDone=false;G.rushKiller=null; // zera corrida pro botão
   if(ejId==='skip'){showNotif('🗳️ Ninguém expulso. Continue!');return;}
   const ej=[G.player,...G.bots].find(c=>c.id===ejId);
   if(ej){
@@ -2272,6 +2308,23 @@ function endMeeting(ejId){
     ejectAnim(ej);
   }
   checkWin();
+}
+
+// 👁️ DENÚNCIA — testemunha sozinha apertou o botão: o assassino é revelado e expulso, sem votação
+function _accuseEject(ejId){
+  const vg=document.getElementById('vgrid');vg.innerHTML='';
+  const alive=[G.player,...G.bots].filter(c=>c.alive);
+  alive.forEach(c=>{
+    const card=document.createElement('div');card.className='vcard';
+    const mc=document.createElement('canvas');mc.width=58;mc.height=70;
+    drawCat(mc.getContext('2d'),29,44,{color:c.color,eye:c.eye,hat:c.hat,pattern:c.pattern,dir:1,scale:1.1});
+    card.appendChild(mc);const nd=document.createElement('div');nd.className='vname';nd.textContent=(c.isPlayer?'👤 ':'')+c.name;card.appendChild(nd);
+    if(c.id===ejId)card.classList.add('roulette-pick'); // destaca o acusado
+    vg.appendChild(card);
+  });
+  document.getElementById('vtimer').textContent='';
+  _playRRBang();
+  _rrTimer=setTimeout(()=>endMeeting(ejId),1700);
 }
 
 // 🎲 ROLETA RUSSA — quando VOCÊ é o impostor, ninguém vota: a sorte sorteia quem vai embora
@@ -2704,13 +2757,19 @@ function drawBodies(){G.bodies.forEach(b=>{drawCat(ctx,b.x-camX,b.y-camY,{color:
 function drawChars(){
   const me=G.player;
   const tgt=(me.isImp&&me.alive)?G.bots.filter(b=>b.alive&&!b.isImp&&dst(me,b)<58).sort((a,b)=>dst(me,a)-dst(me,b))[0]:null;
-  G.bots.forEach(b=>{if(!b.alive)return;const bb=b.walkPhase?Math.abs(Math.sin(b.walkPhase))*2.2:0;drawCat(ctx,b.x-camX,b.y-camY,{color:b.color,eye:b.eye,hat:b.hat,pattern:b.pattern,name:b.name,dir:b.dir,bob:bb});if(watched(b,b===tgt?me:null))_drawEye(b.x-camX,b.y-camY-bb);});
+  G.bots.forEach(b=>{if(!b.alive)return;const bb=b.walkPhase?Math.abs(Math.sin(b.walkPhase))*2.2:0;drawCat(ctx,b.x-camX,b.y-camY,{color:b.color,eye:b.eye,hat:b.hat,pattern:b.pattern,name:b.name,dir:b.dir,bob:bb});if(b.panic)_drawPanic(b.x-camX,b.y-camY-bb);else if(watched(b,b===tgt?me:null))_drawEye(b.x-camX,b.y-camY-bb);});
   const p=G.player;if(G.inHatch==null){const pb=(p.alive&&p.walkPhase)?Math.abs(Math.sin(p.walkPhase))*2.2:0;drawCat(ctx,p.x-camX,p.y-camY,{color:p.color,eye:p.eye,hat:p.hat,pattern:p.pattern,name:p.name,dir:p.dir,dead:!p.alive,alpha:p.alive?1:.45,isPlayer:true,bob:pb});if(p.alive&&watched(p,tgt))_drawEye(p.x-camX,p.y-camY-pb);}
 }
 function _drawEye(sx,sy){
   const pul=Math.sin(Date.now()/300)*1.6;
   ctx.save();ctx.globalAlpha=.92;ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='16px Arial';
   ctx.fillText('👁️',sx,sy-46-pul);
+  ctx.restore();
+}
+function _drawPanic(sx,sy){ // 🏃 testemunha correndo pro botão
+  const pul=Math.abs(Math.sin(Date.now()/110))*4;
+  ctx.save();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='18px Arial';
+  ctx.fillText('❗',sx,sy-48-pul);
   ctx.restore();
 }
 
