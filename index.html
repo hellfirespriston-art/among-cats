@@ -792,7 +792,7 @@ const BPATS=['solid','striped','spotted','tuxedo','solid','solid'];
 const BACCS=['coleira','none','oculos','none','mochila'];
 const gc=document.getElementById('gc'),ctx=gc.getContext('2d');
 
-function resizeGc(){gc.width=Math.min(innerWidth,WW);gc.height=Math.min(innerHeight,WH);}
+function resizeGc(){gc.width=Math.min(innerWidth,WW);gc.height=Math.min(innerHeight,WH);_updVis();}
 
 let _cinStop=false;
 function startGame(){
@@ -835,7 +835,10 @@ function pickT(b){
 function dst(a,b){return Math.hypot(a.x-b.x,a.y-b.y);}
 
 // ══ VISÃO: "olhinho" 👁️ — quem está sendo observado por um tripulante inocente ══
-const VIS=300; // raio de visão
+// raio acompanha a tela: a câmera centraliza o jogador, então a meia-diagonal da tela
+// = ponto mais longe visível. Assim "se dá pra ver na tela, o gato está de olho".
+let VIS=520; // recalculado em resizeGc()
+function _updVis(){try{VIS=Math.round(Math.min(840,Math.max(460,Math.hypot(gc.width,gc.height)/2)));}catch(e){VIS=520;}}
 function _losClear(ax,ay,bx,by){ // linha de visão sem parede no caminho
   const d=Math.hypot(bx-ax,by-ay),steps=Math.ceil(d/26);
   for(let i=1;i<steps;i++){const t=i/steps;if(!walkable(ax+(bx-ax)*t,ay+(by-ay)*t,2))return false;}
